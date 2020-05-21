@@ -1,0 +1,43 @@
+---
+- name: System Prep
+  hosts: all
+  sudo: yes
+  vars:
+    dirs:
+        - /opt/cloudhost
+        - /opt/cloudhost/logs
+
+  tasks:
+    - name: Create /opt/cloudhost and /opt/cloudhost/logs directories
+      file: path=${item} state=directory owner=root group=root mode=0755
+      with_items: ${dirs}
+
+    - name: Umount /opt/mount
+      mount: name=/opt/mount state=unmounted fstype=ext4 src=/dev/vg01/lvol01
+
+    - name: Remove /opt/mount from /etc/fstab
+      lineinfile: dest=/etc/fstab insertafter=EOF state=absent regexp='/opt/mount '
+
+    - name: Add ${dirs[0]} to /etc/fstab
+      lineinfile: dest=/etc/fstab insertafter=EOF state=present regexp='${dirs[0]} ' line='/dev/vg01/lvol01 ${dirs[0]} ext4 defaults 1 2'
+
+    - name: Mount ${dirs[0]}
+      mount: name=${dirs[0]} state=mounted fstype=ext4 src=/dev/vg01/lvol01 dump=1 passno=2
+
+    - name: Set ownership of ${dirs[0]} to root:root
+      file: path=${dirs[0]} state=directory owner=root group=root mode=0755
+
+    - name: Umount /opt/mount2
+      mount: name=/opt/mount2 state=unmounted fstype=ext4 src=/dev/vg02/lvol01
+
+    - name: Remove /opt/mount2 from /etc/fstab
+      lineinfile: dest=/etc/fstab insertafter=EOF state=absent regexp='/opt/mount2 '
+
+    - name: Add ${dirs[1]} to /etc/fstab
+      lineinfile: dest=/etc/fstab insertafter=EOF state=present regexp='${dirs[1]} ' line='/dev/vg02/lvol01 ${dirs[1]} ext4 defaults 1 2'
+
+    - name: Mount ${dirs[1]}
+      mount: name=${dirs[1]} state=mounted fstype=ext4 src=/dev/vg02/lvol01 dump=1 passno=2
+
+    - name: Set ownership of ${dirs[1]} to root:root
+      file: path=${dirs[1]} state=directory owner=root group=root mode=0755

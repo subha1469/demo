@@ -1,0 +1,121 @@
+---
+- name: JBoss
+  hosts: jbossservers
+  become: yes
+  tasks:
+
+    - name: Validate Setup
+      action: fail msg="Missing needed vars!"
+      with_items: [ $base_dir, $http_port, $https_port, $ajp_port ]
+      when: item is not defined
+
+    - name: Remove yum cache
+      command: rm -rf /var/cache/yum/*
+
+    - name: Clean yum data
+      command: yum clean all
+
+    - name: Remove existing jboss user
+      action: yum name=user-jboss state=absent
+
+#    - name: Install RHEL supplementary repo
+#      action: yum name=hpit-yum-qpk-rhel6-supplementary-repo state=latest
+
+    - name: Install JDK
+      action: yum name={{item}} state=latest
+      with_items: [
+         java-1.8.0-openjdk]
+
+    - name: Copy JBoss7.repo
+      template: src=templates/etc/yum.repos.d/jboss-eap7.repo.j2 dest=/etc/yum.repos.d/jboss-eap7.repo backup=yes
+      tags: yum
+
+    - name: Install EAP packages
+      action: yum name={{item}} state=latest
+      with_items: [
+         cjboss-eap7]
+
+    - name: Create Jboss Base dir
+      command: cp -pr {{base_dir}}/jboss/jbosseap7/standalone {{base_dir}}/jboss/
+
+    - name: Create {{base_dir}}/logs/jboss-eap directory
+      file: path={{base_dir}}/logs/jboss-eap state=directory owner=jboss group=jboss mode=0775
+      #register: createloglink
+
+    - name: Log Destination link
+      file: src=/opt/cloudhost/logs/jboss-eap/ dest=/opt/cloudhost/jboss/standalone/log owner=jboss group=jboss state=link
+      #when: createloglink|success
+
+    - name: Configure {{base_dir}}/jboss/standalone/configuration/standalone.xml
+      template: src=templates/{{base_dir}}/jboss/standalone/configuration/standalone.xml.j2 dest={{base_dir}}/jboss/standalone/configuration/standalone.xml owner=jboss group=jboss mode=0644
+      notify: restart jboss
+
+    - name: Configure {{base_dir}}/jboss/standalone/configuration/standalone-ha.xml
+      template: src=templates/{{base_dir}}/jboss/standalone/configuration/standalone-ha.xml.j2 dest={{base_dir}}/jboss/standalone/configuration/standalone-ha.xml owner=jboss group=jboss mode=0644
+      notify: restart jboss
+
+    - name: Configure {{base_dir}}/jboss/standalone/configuration/standalone-full.xml
+      template: src=templates/{{base_dir}}/jboss/standalone/configuration/standalone-full.xml.j2 dest={{base_dir}}/jboss/standalone/configuration/standalone-full.xml owner=jboss group=jboss mode=0644
+      notify: restart jboss
+
+    - name: Configure {{base_dir}}/jboss/standalone/configuration/standalone-full-ha.xml
+      template: src=templates/{{base_dir}}/jboss/standalone/configuration/standalone-full-ha.xml.j2 dest={{base_dir}}/jboss/standalone/configuration/standalone-full-ha.xml owner=jboss group=jboss mode=0644
+      notify: restart jboss
+
+    - name: Configure {{base_dir}}/jboss/standalone/configuration/mgmt-users.properties
+      template: src=templates/{{base_dir}}/jboss/standalone/configuration/mgmt-users.properties.j2 dest={{base_dir}}/jboss/standalone/configuration/mgmt-users.properties owner=jboss group=jboss mode=0644
+      notify: restart jboss
+
+    - name: Configure /etc/sysconfig/jboss-eap
+      template: src=templates/etc/sysconfig/jboss-eap.conf.j2 dest=/etc/sysconfig/jboss-eap.conf
+      notify: restart jboss
+
+    - name: Configure /etc/logrotate.d/jboss-eap
+      template: src=templates/etc/logrotate.d/jboss-eap.j2 dest=/etc/logrotate.d/jboss-eap
+      notify: restart jboss
+
+    - name: Copy /etc/init.d/jboss-eap
+      template: src=templates/etc/init.d/jboss-eap.j2 dest=/etc/init.d/jboss-eap
+
+    - name: add execution access to jboss service
+      file: path=/etc/init.d/jboss-eap state=file owner=root group=root mode=0755
+
+#    - name: Ensure jboss is running (and enable to autostart)
+#      action: service name=jboss-eap enabled=yes state=started
+
+
+    # ----------- START: SSL section
+    - name: Create {{base_dir}}/jboss/security directory
+      file: path={{base_dir}}/jboss/security state=directory owner=jboss group=jboss mode=0755
+
+    - name: Copy {{base_dir}}/jboss/security/keystore.jks
+      copy: src=files/{{base_dir}}/jboss/security/keystore.jks dest={{base_dir}}/jboss/security/keystore.jks owner=jboss group=jboss mode=0644
+      notify: restart jboss
+
+    - name: Copy HP CA certs across to /etc/pki/java
+      copy: src={{item}} dest=/etc/pki/java owner=root group=root mode=0644
+      with_fileglob: files/etc/pki/java/*
+
+    - name: Import hpca2ssG2_ns.crt into /etc/pki/java/cacerts
+      command: /usr/bin/keytool -import -alias hpca2 -noprompt -trustcacerts -file /etc/pki/java/hpca2ssG2_ns.crt -storepass changeit -keystore /etc/pki/java/cacerts
+      ignore_errors: yes
+
+    - name: Import hpca2_recertified_ns.crt into /etc/pki/java/cacerts
+      command: /usr/bin/keytool -import -alias hpca2_rec -noprompt -trustcacerts -file /etc/pki/java/hpca2_recertified_ns.crt -storepass changeit -keystore /etc/pki/java/cacerts
+      ignore_errors: yes
+    # ----------- END: SSL section
+
+    - name: Ensure jboss is enable to autostart
+      command: chkconfig jboss-eap on
+
+    - name: Ensure jboss is running
+      action: service name=jboss-eap enabled=yes state=started
+
+    - name: Configure motd
+      template: src=templates/etc/motd.j2 dest=/etc/motd
+
+    - include: tasks/monit.yml
+
+  handlers:
+    - include: handlers/jboss.yml
+    - include: handlers/monit.yml

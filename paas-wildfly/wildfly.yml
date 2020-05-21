@@ -1,0 +1,118 @@
+---
+- name: Wildfly
+  hosts: wildflyservers
+  sudo: yes
+  tasks:
+
+    - name: Validate Setup
+      action: fail msg="Missing needed vars!"
+      with_items: [ $base_dir, $http_port, $https_port, $ajp_port ]
+      when: item is not defined
+
+    - name: Remove yum cache
+      command: rm -rf /var/cache/yum/*
+
+    - name: Clean yum data
+      command: yum clean all
+
+    - name: Remove existing wildfly user
+      action: yum name=user-wildfly state=absent
+
+    - name: Install JDK
+      action: yum name={{item}} state=latest
+      with_items: [
+         java-1.8.0-openjdk]
+
+    - name: Copy wildfly.repo
+      template: src=templates/etc/yum.repos.d/wildfly10.repo.j2 dest=/etc/yum.repos.d/SharedHosting.repo backup=yes
+      tags: yum
+
+    - name: Install wildfly packages
+      action: yum name={{item}} state=latest
+      with_items: [
+         cwildfly10]
+
+    - name: Create wildfly Base dir
+      command: cp -pr {{base_dir}}/wildfly10/install/standalone {{base_dir}}/wildfly10/
+
+    - name: Create {{base_dir}}/logs/wildfly directory
+      file: path={{base_dir}}/logs/wildfly10 state=directory owner=wildfly group=wildfly mode=0775
+      register: createloglink
+
+    - name: Log Destination link
+      file: src=/opt/cloudhost/logs/wildfly10/ dest=/opt/cloudhost/wildfly10/standalone/log owner=wildfly group=wildfly state=link
+      when: createloglink|success
+
+    - name: Configure {{base_dir}}/wildfly10/standalone/configuration/standalone.xml
+      template: src=templates/{{base_dir}}/wildfly10/standalone/configuration/standalone.xml.j2 dest={{base_dir}}/wildfly10/standalone/configuration/standalone.xml owner=wildfly group=wildfly mode=0644
+      notify: restart wildfly
+
+    - name: Configure {{base_dir}}/wildfly10/standalone/configuration/standalone-ha.xml
+      template: src=templates/{{base_dir}}/wildfly10/standalone/configuration/standalone-ha.xml.j2 dest={{base_dir}}/wildfly10/standalone/configuration/standalone-ha.xml owner=wildfly group=wildfly mode=0644
+      notify: restart wildfly
+
+    - name: Configure {{base_dir}}/wildfly/standalone/configuration/standalone-full.xml
+      template: src=templates/{{base_dir}}/wildfly10/standalone/configuration/standalone-full.xml.j2 dest={{base_dir}}/wildfly10/standalone/configuration/standalone-full.xml owner=wildfly group=wildfly mode=0644
+      notify: restart wildfly
+
+    - name: Configure {{base_dir}}/wildfly/standalone/configuration/standalone-full-ha.xml
+      template: src=templates/{{base_dir}}/wildfly10/standalone/configuration/standalone-full-ha.xml.j2 dest={{base_dir}}/wildfly10/standalone/configuration/standalone-full-ha.xml owner=wildfly group=wildfly mode=0644
+      notify: restart wildfly
+
+    - name: Configure {{base_dir}}/wildfly/standalone/configuration/mgmt-users.properties
+      template: src=templates/{{base_dir}}/wildfly10/standalone/configuration/mgmt-users.properties.j2 dest={{base_dir}}/wildfly10/standalone/configuration/mgmt-users.properties owner=wildfly group=wildfly mode=0644
+      notify: restart wildfly
+
+    - name: Configure /etc/sysconfig/wildfly10.conf
+      template: src=templates/etc/sysconfig/wildfly10.conf.j2 dest=/etc/sysconfig/wildfly10.conf
+      notify: restart wildfly
+
+    - name: Configure /etc/logrotate.d/wildfly
+      template: src=templates/etc/logrotate.d/wildfly10.j2 dest=/etc/logrotate.d/wildfly10
+      notify: restart wildfly
+
+    - name: Copy /etc/init.d/wildfly
+      template: src=templates/etc/init.d/wildfly10.j2 dest=/etc/init.d/wildfly10
+
+    - name: add execution access to wildfly service
+      file: path=/etc/init.d/wildfly10 state=file owner=root group=root mode=0755
+
+    - name: adding DO_NOT_REMOVE app
+      copy: src=files/{{base_dir}}/wildfly10/standalone/deployments/DO_NOT_REMOVE.war dest={{base_dir}}/wildfly10/standalone/deployments/DO_NOT_REMOVE.war owner=wildfly group=wildfly
+      notify: restart wildfly
+
+    # ----------- START: SSL section
+    - name: Create {{base_dir}}/wildfly10/security directory
+      file: path={{base_dir}}/wildfly10/security state=directory owner=wildfly group=wildfly mode=0755
+
+    - name: Copy {{base_dir}}/wildfly10/security/keystore.jks
+      copy: src=files/{{base_dir}}/wildfly10/security/keystore.jks dest={{base_dir}}/wildfly10/security/keystore.jks owner=wildfly group=wildfly mode=0644
+      notify: restart wildfly
+
+    - name: Copy HP CA certs across to /etc/pki/java
+      copy: src={{item}} dest=/etc/pki/java owner=root group=root mode=0644
+      with_fileglob: files/etc/pki/java/*
+
+    - name: Import hpca2ssG2_ns.crt into /etc/pki/java/cacerts
+      command: /usr/bin/keytool -import -alias hpca2 -noprompt -trustcacerts -file /etc/pki/java/hpca2ssG2_ns.crt -storepass changeit -keystore /etc/pki/java/cacerts
+      ignore_errors: yes
+
+    - name: Import hpca2_recertified_ns.crt into /etc/pki/java/cacerts
+      command: /usr/bin/keytool -import -alias hpca2_rec -noprompt -trustcacerts -file /etc/pki/java/hpca2_recertified_ns.crt -storepass changeit -keystore /etc/pki/java/cacerts
+      ignore_errors: yes
+    # ----------- END: SSL section
+
+    - name: Ensure wildfly is enable to autostart
+      command: chkconfig wildfly10 on
+
+    - name: Ensure wildfly is running
+      action: service name=wildfly10 enabled=yes state=started
+
+    - name: Configure motd
+      template: src=templates/etc/motd.j2 dest=/etc/motd
+
+    - include: tasks/monit.yml
+
+  handlers:
+    - include: handlers/wildfly.yml
+    - include: handlers/monit.yml

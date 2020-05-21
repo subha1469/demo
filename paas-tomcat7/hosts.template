@@ -1,0 +1,9 @@
+[tomcat7]
+__SERVER__
+
+[tomcat7:vars]
+http_port=8080
+https_port=8443
+ajp_port=8009
+jmx_port=8090
+catalina_base={{base_dir}}/tomcat7

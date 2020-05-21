@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>Apache Welcome Page</title>
+<style type="text/css">
+	/*<![CDATA[*/
+	body {
+		background-color: #fff;
+		color: #000;
+		font-size: 0.9em;
+		font-family: sans-serif,helvetica;
+		margin: 0;
+		padding: 0;
+	}
+	:link {
+		color: #c00;
+	}
+	:visited {
+		color: #c00;
+	}
+	a:hover {
+		color: #f50;
+	}
+	h1 {
+		text-align: center;
+		margin: 0;
+		padding: 0.6em 2em 0.4em;
+		background-color: #2E64FE;
+		color: #fff;
+		font-weight: normal;
+		font-size: 1.75em;
+		border-bottom: 2px solid #000;
+	}
+	h1 strong {
+		font-weight: bold;
+	}
+	h2 {
+		font-size: 1.1em;
+		font-weight: bold;
+	}
+	hr {
+		display: none;
+	}
+	.content {
+		padding: 1em 5em;
+	}
+	.content-columns {
+		/* Setting relative positioning allows for
+		absolute positioning for sub-classes */
+		position: relative;
+		padding-top: 1em;
+	}
+	.content-column-left {
+		/* Value for IE/Win; will be overwritten for other browsers */
+		width: 47%;
+		padding-right: 3%;
+		float: left;
+		padding-bottom: 2em;
+	}
+	.content-column-left hr {
+		display: none;
+	}
+	.content-column-right {
+		/* Values for IE/Win; will be overwritten for other browsers */
+		width: 47%;
+		padding-left: 3%;
+		float: left;
+		padding-bottom: 2em;
+	}
+	.content-columns>.content-column-left, .content-columns>.content-column-right {
+		/* Non-IE/Win */
+	}
+	.code {
+		font-family: "Courier New";
+	}
+	img {
+		border: 2px solid #fff;
+		padding: 2px;
+		margin: 2px;
+	}
+	a:hover img {
+		border: 2px solid #f50;
+	}
+	/*]]>*/
+</style>
+</head>
+<body>
+	<h1>Apache Welcome Page for {{ ansible_hostname }}</h1>
+	<div class="content">
+		<div class="content-middle">
+			<p>This page is used to test the proper operation of the Apache server after it has been installed. If you can read this page, it means that the Apache server installed at this site is working properly.</p>
+		</div>
+		<hr/>
+		<h2>Important Details:</h2>
+		<ul>
+			<li>DocumentRoot is <span class="code">{{base_dir}}/apache/www</span></li>
+			<li>The main conf file to customize Apache is <span class="code">/etc/httpd/conf/httpd.conf</span></li>
+			<li>Logs are written to <span class="code">{{base_dir}}/logs/apache</span></li>
+		</ul>
+		<p>You may now add content to the DocumentRoot. Note that until you do so, people visiting your website will see this page, and not your content.</p>
+	</div>
+</body>
+</html>

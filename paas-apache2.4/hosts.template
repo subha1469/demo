@@ -1,0 +1,15 @@
+[webservers]
+__SERVER__
+
+[webservers:vars]
+owner=paasweb
+group=paaswebgrp
+http_port=80
+https_port=443
+siteminder_enabled=yes
+siteminder_home=/opt/ca/siteminder12
+pfagent_enabled=yes
+apache_content_dir={{base_dir}}/apache/www
+apache_logs_dir={{base_dir}}/logs/apache
+ssl_enabled=yes
+public_interface=eth0

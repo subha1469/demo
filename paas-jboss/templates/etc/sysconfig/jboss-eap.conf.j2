@@ -1,0 +1,48 @@
+# General configuration for the init.d scripts,
+# not necessarily for JBoss EAP itself.
+# default location: /etc/default/jboss-eap
+
+# Location of JDK
+JAVA_HOME="/usr/lib/jvm/jre-1.8.0"
+
+# Location of JBoss EAP
+JBOSS_HOME="/opt/cloudhost/jboss/jbosseap7"
+
+JBOSS_BASE="/opt/cloudhost/jboss/standalone"
+
+# The username who should own the process.
+JBOSS_USER=jboss
+
+# The mode JBoss EAP should start, standalone or domain
+JBOSS_MODE=standalone
+
+## Configuration for standalone mode
+JBOSS_CONFIG=standalone-full-ha.xml
+
+## Configuration for domain mode
+# JBOSS_DOMAIN_CONFIG=domain.xml
+# JBOSS_HOST_CONFIG=host-master.xml
+
+## The amount of time to wait for startup
+ STARTUP_WAIT=60
+
+# The amount of time to wait for shutdown
+ SHUTDOWN_WAIT=20
+
+# Location to keep the console log
+#JBOSS_CONSOLE_LOG="/var/log/jboss-eap/console.log"
+
+# Location to keep the console log
+JBOSS_CONSOLE_LOG="/opt/cloudhost/logs/jboss-eap/console.log"
+
+# Assign default IP address, usually from eth0 or eth1
+JBOSS_IP={{ansible_default_ipv4.address}}
+
+## ## Additionals args to include in startup
+JBOSS_OPTS="-Djboss.server.base.dir=$JBOSS_BASE -b $JBOSS_IP -bmanagement $JBOSS_IP"
+
+# Main java opts
+JAVA_OPTS="-Xms1024m -Xmx1024m -Djava.net.preferIPv4Stack=true -Dorg.jboss.resolver.warning=true -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.server.gcInterval=3600000 -Djboss.modules.system.pkgs=org.jboss.byteman -Djava.awt.headless=true -Djboss.server.default.config=$STANDALONE_FILE"
+
+# Enable verbose GC logging
+JAVA_OPTS="$JAVA_OPTS -XX:+PrintGCDetails -XX:+PrintGCTimeStamps"

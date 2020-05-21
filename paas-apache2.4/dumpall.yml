@@ -1,0 +1,16 @@
+---
+- name: Dump app variables
+  hosts: webservers
+
+  tasks:
+    - name: Test register
+      action: command df
+      register: df
+
+    - name: Dump to /tmp/ansible.all
+      action: template src=templates/dumpall.j2 dest=/tmp/ansible.all
+
+    - name: dump the hostvars
+      #action: raw echo {{ hostvars['c0004046.itcs.hp.com']['df'] }} >> /tmp/ansible.test
+      #action: raw echo {{ hostvars[ansible_fqdn]['df'] }} >> /tmp/ansible.test
+      action: shell echo "{{ hostvars[ansible_fqdn]['df']['stdout']  }}" > /tmp/ansible.test

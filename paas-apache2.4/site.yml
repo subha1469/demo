@@ -1,0 +1,9 @@
+---
+- name: CSM Apache Entry Point
+  hosts: all
+  become: yes
+  
+#- include: sysprep.yml
+- include: apache.yml
+#- include: php.yml
+#- include: python.yml

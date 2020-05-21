@@ -1,0 +1,25 @@
+---
+- name: Python Setup
+  hosts: webservers
+  sudo: yes
+
+  tasks:
+
+    - name: Validating setup
+      action: fail msg="base_dir must be set in hosts!"
+      with_items: [ $base_dir ]
+      when: item is not defined
+
+    - name: Install Python related packages
+      action: yum name={{item}} state=latest
+      with_items:
+         - mod_wsgi
+      notify: restart apache
+
+    - name: Configure wsgi.conf
+      template: src=templates/etc/httpd/conf.d/wsgi.conf.j2 dest=/etc/httpd/conf.d/wsgi.conf
+      notify:
+        - restart apache
+
+  handlers:
+    - include: handlers/apache.yml

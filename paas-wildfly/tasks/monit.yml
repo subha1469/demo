@@ -1,0 +1,14 @@
+---
+- name: Install Monit
+  yum: name=hpit-monit state=latest
+
+- name: Configure /etc/monitrc file
+  template: src=templates/etc/monitrc.j2 dest=/etc/monitrc
+  notify: restart monit
+
+- name: Configure /etc/monit.d/wildfly10 file
+  template: src=templates/etc/monit.d/wildfly10.j2 dest=/etc/monit.d/wildfly10
+  notify: restart monit
+
+- name: Ensure Monit is running (and enable to autostart)
+  action: service name=monit enabled=yes state=started

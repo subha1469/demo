@@ -1,0 +1,37 @@
+---
+- name: PHP Setup
+  hosts: webservers
+  sudo: yes
+
+  tasks:
+
+    - name: Validating setup
+      action: fail msg="base_dir must be set in hosts!"
+      with_items: [ $base_dir ]
+      when: item is not defined
+
+    - name: Install PHP + extensions from default HPIT repos
+      action: yum name={{item}} state=latest
+      with_items:
+         - php
+         - php-mysql
+         - php-pdo
+         - php-xml
+         - php-soap
+         - php-pecl-apc
+         - php-gd
+         - php-ldap
+      notify: restart apache
+
+    - name: Install HPIT EPEL repo
+      action: yum name=hpit-yum-epel-repo state=latest
+
+    - name: Install extensions from HPIT EPEL repo
+      #action: yum name={{item}} state=latest enablerepo=RedHat-6Server-x86_64-Fedora-EPEL
+      action: yum name={{item}} state=latest enablerepo=*EPEL
+      with_items:
+         - php-mcrypt
+      notify: restart apache
+
+  handlers:
+    - include: handlers/apache.yml

@@ -1,0 +1,5 @@
+[tomcat8]
+name=tomcat8
+baseurl=http://c9t25285.itcs.hpecorp.net
+enabled=1
+gpgcheck=0

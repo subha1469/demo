@@ -1,0 +1,10 @@
+# Uncomment following lines to enable Ping Federate
+#LoadFile modules/libopentoken.so
+#LoadModule pf_module modules/mod_pf.so
+
+<IfModule pf_module>
+    PingFederateConfigurationFile conf/mod_pf.conf
+    <Directory />
+        AuthType PFApacheAgent
+    </Directory>
+</IfModule>

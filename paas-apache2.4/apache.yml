@@ -1,0 +1,195 @@
+---
+- name: Apache
+  hosts: webservers
+#  sudo: yes
+  become: yes
+  tasks:
+
+    - name: Validate Setup
+      action: fail msg="Missing needed vars!"
+      with_items: [ $base_dir, $owner, $group, $owner_uid, $owner_gid, $http_port, $https_port, $siteminder_enabled, $siteminder_home, $ssl_enabled ]
+      when: item is not defined
+
+    - name: Copy SharedHosting.repo
+      template: src=templates/etc/yum.repos.d/SharedHosting.repo.j2 dest=/etc/yum.repos.d/SharedHosting.repo
+      tags: yum
+
+    - name: Remove yum cache
+      file: path=/var/cache/yum state=absent
+      file: path=/var/cache/yum state=directory
+
+#    - name: Remove yum cache
+#      command: rm -rf /var/cache/yum/*
+
+
+    - name: Clean yum data
+      command: yum clean all
+      args:
+         warn: no
+
+    - name: Install app-AIS-user-paasweb
+      yum: name=app-AIS-user-paasweb state=latest
+
+    - name: Install Apache
+      yum: name=httpd state=present
+
+    - name: SELinux in permissive mode
+      selinux:
+         policy: targeted
+         state: permissive
+
+    - name: Disable Selinux
+      selinux:
+         state: disabled
+
+    - name: Create {{base_dir}}/apache
+      action: file path={{base_dir}}/apache state=directory owner={{owner}} group={{group}} mode=0755
+
+    - name: Create {{base_dir}}/apache/www
+      action: file path={{base_dir}}/apache/www state=directory owner={{owner}} group={{group}} mode=0755
+
+    - name: Create {{base_dir}}/apache/www/html
+      action: file path={{base_dir}}/apache/www/html state=directory owner={{owner}} group={{group}} mode=0775
+
+    - name: Create {{base_dir}}/apache/www/cgi-bin
+      action: file path={{base_dir}}/apache/www/cgi-bin state=directory owner={{owner}} group={{group}} mode=0775
+
+    - name: Create {{base_dir}}/apache/www/html/DO_NOT_REMOVE
+      action: file path={{base_dir}}/apache/www/html/DO_NOT_REMOVE state=directory owner={{owner}} group={{group}} mode=0755
+
+    - name: Create {{base_dir}}/logs/apache
+      action: file path={{base_dir}}/logs/apache state=directory owner={{owner}} group={{group}} mode=0755
+
+    - name: Copy over default landing page
+      template: src=templates/{{base_dir}}/apache/www/html/index.html.j2 dest={{base_dir}}/apache/www/html/index.html owner={{owner}} group={{group}} mode=0644
+
+    - name: Copy over default health check page
+      template: src=templates/{{base_dir}}/apache/www/html/DO_NOT_REMOVE/health_check.html.j2 dest={{base_dir}}/apache/www/html/DO_NOT_REMOVE/health_check.html
+
+    - name: Configure httpd.conf
+      template: src=templates/etc/httpd/conf/httpd.conf.j2 dest=/etc/httpd/conf/httpd.conf
+      notify: restart apache
+
+    # ----------- START: conf.d files configuration
+    - name: adding conf.d configuration files
+      template: src=templates/etc/httpd/conf.d/{{item.source}} dest=/etc/httpd/conf.d/{{item.dest}}
+      with_items:
+        - {source: 'autoindex.conf.j2' , dest: 'autoindex.conf'}
+        - {source: 'welcome.conf.j2' , dest: 'welcome.conf'}
+      notify: restart apache
+
+    # ----------- START: module section
+    - name: Configure modules
+      template: src=templates/etc/httpd/conf.modules.d/{{item.source}} dest=/etc/httpd/conf.modules.d/{{item.dest}}
+      with_items:
+        - {source: '00-base.conf.j2' , dest: '00-base.conf'}
+        - {source: '00-dav.conf.j2' , dest: '00-dav.conf'}
+        - {source: '00-lua.conf.j2' , dest: '00-lua.conf'}
+        - {source: '00-mpm.conf.j2' , dest: '00-mpm.conf'}
+        - {source: '00-proxy.conf.j2' , dest: '00-proxy.conf'}
+        - {source: '00-systemd.conf.j2' , dest: '00-systemd.conf'}
+        - {source: '01-cgi.conf.j2' , dest: '01-cgi.conf'}
+      notify: restart apache
+    # ----------- END: SSL section
+
+    # ----------- START: SSL section
+    - name: Install SSL related packages
+      yum: name={{item}} state=latest
+      with_items: [ mod_ssl, crypto-utils ]
+      when: ssl_enabled == "yes"
+
+    - name: Configure ssl.conf
+      template: src=templates/etc/httpd/conf.d/ssl.conf.j2 dest=/etc/httpd/conf.d/ssl.conf
+      notify: restart apache
+
+    - name: Copy /etc/pki/tls/certs/ca-bundle.crt
+      copy: src=files/etc/pki/tls/certs/ca-bundle.crt dest=/etc/pki/tls/certs owner=root group=root mode=0644
+    # ----------- END: SSL section
+
+    # ----------- START: Reverse Proxy section
+    - name: Configure proxy_ajp.conf
+      template: src=templates/etc/httpd/conf.d/proxy_ajp.conf.j2 dest=/etc/httpd/conf.d/proxy_ajp.conf
+      notify: restart apache
+
+    - name: Copy mod_wl.so
+      copy: src=files/etc/httpd/modules/mod_wl_24.so dest=/etc/httpd/modules/mod_wl_24.so owner=root group=root mode=0755
+      notify: restart apache
+
+    - name: Configure weblogic.conf
+      template: src=templates/etc/httpd/conf.d/weblogic.conf.j2 dest=/etc/httpd/conf.d/weblogic.conf
+      notify: restart apache
+    # ----------- END: Reverse Proxy section
+
+    # ----------- START: Siteminder section
+#    - name: Ensure HPIT SharedHosting repo exists
+#      copy: src=files/etc/yum.repos.d/HPIT-SharedHosting.repo dest=/etc/yum.repos.d/HPIT-SharedHosting.repo
+
+#    - name: Install Siteminder Web Agent RPM
+#      yum: name=hpit-smwa12 state=present
+#      when: siteminder_enabled == "yes"
+
+#    - name: Configure WebAgent.conf
+#      template: src=templates/etc/httpd/conf/WebAgent.conf.j2 dest=/etc/httpd/conf/WebAgent.conf
+#      when: siteminder_enabled == "yes"
+#      notify: restart apache
+
+#    - name: Configure WebAgentTrace.conf
+#      template: src=templates/etc/httpd/conf/WebAgentTrace.conf.j2 dest=/etc/httpd/conf/WebAgentTrace.conf
+#      when: siteminder_enabled == "yes"
+#      notify: restart apache
+
+#    - name: Configure LocalConfig.conf
+#      template: src=templates/etc/httpd/conf/LocalConfig.conf.j2 dest=/etc/httpd/conf/LocalConfig.conf
+#      when: siteminder_enabled == "yes"
+#      notify: restart apache
+
+#    - name: Configure siteminder.conf
+#      template: src=templates/etc/httpd/conf.d/siteminder.conf.j2 dest=/etc/httpd/conf.d/siteminder.conf
+#      when: siteminder_enabled == "yes"
+#      notify: restart apache
+    # ----------- END: Siteminder section
+
+    # ----------- START: Ping Federate section
+    #- name: Copy mod_pf.so
+    #  copy: src=files/etc/httpd/modules/mod_pf.so dest=/etc/httpd/modules/mod_pf.so owner=root group=root mode=0755
+    #  notify: restart apache
+    #
+    #- name: Copy libopentoken.so
+    #  copy: src=files/etc/httpd/modules/libopentoken.so dest=/etc/httpd/modules/libopentoken.so owner=root group=root mode=0755
+    #  notify: restart apache
+    #
+    #- name: Configure mod_pf.conf
+    #  template: src=templates/etc/httpd/conf/mod_pf.conf.j2 dest=/etc/httpd/conf/mod_pf.conf
+    #  when: pfagent_enabled == "yes"
+    #  notify: restart apache
+    #
+    #- name: Configure agent-config.txt
+    #  template: src=templates/etc/httpd/conf/agent-config.txt.j2 dest=/etc/httpd/conf/agent-config.txt
+    #  when: pfagent_enabled == "yes"
+    #  notify: restart apache
+    #
+    #- name: Configure pfagent.conf
+    #  template: src=templates/etc/httpd/conf.d/pfagent.conf.j2 dest=/etc/httpd/conf.d/pfagent.conf
+    #  when: pfagent_enabled == "yes"
+    #  notify: restart apache
+    # ----------- END: Ping Federate section
+
+#    - name: Configure /etc/sysconfig/httpd
+#      template: src=templates/etc/sysconfig/httpd.j2 dest=/etc/sysconfig/httpd
+#      notify: restart apache
+
+    - name: Configure logrotate
+      template: src=templates/etc/logrotate.d/httpd.j2 dest=/etc/logrotate.d/httpd
+
+    - name: Ensure Apache is running (and enable to autostart)
+      action: service name=httpd enabled=yes state=started
+
+    - name: Configure motd
+      template: src=templates/etc/motd.j2 dest=/etc/motd
+      when: public_interface is not defined or public_interface != "bond0"
+
+    - include: tasks/monit.yml
+
+  handlers:
+    - include: handlers/apache.yml
+    - include: handlers/monit.yml

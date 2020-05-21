@@ -1,0 +1,171 @@
+#!/bin/sh
+#
+# tomcat9 control script
+#
+# chkconfig: - 80 20
+# description: Tomcat 9 startup script
+# processname: tomcat9
+# pidfile: /var/run/tomcat/tomcat9.pid
+# config: /etc/sysconfig/tomcat9.conf
+#
+
+# Source function library.
+. /etc/init.d/functions
+
+# Load Java configuration.
+[ -r /etc/java/java.conf ] && . /etc/java/java.conf
+export JAVA_HOME
+
+# Load TOMCAT init.d configuration.
+if [ -z "$TOMCAT_CONF" ]; then
+        TOMCAT_CONF="/etc/sysconfig/tomcat9"
+fi
+
+[ -r "$TOMCAT_CONF" ] && . "${TOMCAT_CONF}"
+
+# Set defaults.
+
+if [ -z "$JAVA_OPTS" ]; then
+        JAVA_OPTS=""
+fi
+export JAVA_OPTS
+
+if [ -z "$CATALINA_HOME" ]; then
+        CATALINA_HOME=/opt/tomcat
+fi
+export CATALINA_HOME
+
+if [ -z "$CATALINA_BASE" ]; then
+        CATALINA_BASE=/opt/tomcat
+fi
+export CATALINA_BASE
+
+
+if [ -z "$TOMCAT_PIDFILE" ]; then
+        TOMCAT_PIDFILE=/var/run/tomcat/tomcat9.pid
+fi
+export TOMCAT_PIDFILE
+
+
+if [ -z "$STARTUP_WAIT" ]; then
+        STARTUP_WAIT=30
+fi
+
+if [ -z "$SHUTDOWN_WAIT" ]; then
+        SHUTDOWN_WAIT=30
+fi
+
+if [ -z "$TOMCAT_LOCKFILE" ]; then
+        TOMCAT_LOCKFILE=/var/lock/subsys/tomcat9
+fi
+
+if [ -z "$TOMCAT_SCRIPT" ]; then
+        TOMCAT_SCRIPT=$CATALINA_HOME/bin/catalina.sh
+fi
+
+prog='tomcat'
+currenttime=$(date +%s%N | cut -b1-13)
+
+start() {
+        echo -n "Starting $prog: "
+        if [ -f $TOMCAT_PIDFILE ]; then
+                read ppid < $TOMCAT_PIDFILE
+                if [ `ps --pid $ppid 2> /dev/null | grep -c $ppid 2> /dev/null` -eq '1' ]; then
+                        echo -n "$prog is already running"
+                        success
+        echo
+                return 1
+        else
+                rm -f $TOMCAT_PIDFILE
+        fi
+        fi
+
+        mkdir -p $(dirname $TOMCAT_PIDFILE)
+        chown $TOMCAT_USER:${TOMCAT_USER} $(dirname $TOMCAT_PIDFILE) || true
+        touch $TOMCAT_PIDFILE
+        chown $TOMCAT_USER:${TOMCAT_USER} $TOMCAT_PIDFILE
+
+        if [ ! -z "$TOMCAT_USER" ]; then
+                        if [ -r /etc/rc.d/init.d/functions ]; then
+                                cd $CATALINA_HOME
+                                daemon --user $TOMCAT_USER "$TOMCAT_SCRIPT start" >/dev/null 2>&1
+                                echo $(tomcat_pid) > $TOMCAT_PIDFILE
+                                cd -
+                        else
+                                su - $TOMCAT_USER -c "$TOMCAT_SCRIPT start"
+                                echo $(tomcat_pid) > $TOMCAT_PIDFILE
+                        fi
+        fi
+
+        touch $TOMCAT_LOCKFILE
+        success
+        echo
+        return 0
+}
+
+tomcat_pid() {
+  echo `ps aux | grep org.apache.catalina.startup.Bootstrap | grep -v grep | awk '{ print $2 }'`
+}
+
+stop() {
+        echo -n $"Stopping $prog: "
+        count=0;
+
+        if [ -f $TOMCAT_PIDFILE ]; then
+                read kpid < $TOMCAT_PIDFILE
+                let kwait=$SHUTDOWN_WAIT
+
+                # Try issuing SIGTERM
+                #kill -15 $kpid
+                su - $TOMCAT_USER -c "$TOMCAT_SCRIPT stop &"
+                until [ `ps --pid $kpid 2> /dev/null | grep -c $kpid 2> /dev/null` -eq '0' ] || [ $count -gt $kwait ]
+                        do
+                        sleep 1
+                        let count=$count+1;
+                done
+
+                if [ $count -gt $kwait ]; then
+                        kill -9 $kpid
+                fi
+        fi
+        rm -f $TOMCAT_PIDFILE
+        rm -f $TOMCAT_LOCKFILE
+        success
+        echo
+}
+
+status() {
+        if [ -f $TOMCAT_PIDFILE ]; then
+                read ppid < $TOMCAT_PIDFILE
+                if [ `ps --pid $ppid 2> /dev/null | grep -c $ppid 2> /dev/null` -eq '1' ]; then
+                        echo "$prog is running (pid $ppid)"
+                        return 0
+                else
+                        echo "$prog dead but pid file exists"
+                        return 1
+                fi
+        fi
+        echo "$prog is not running"
+        return 3
+}
+
+case "$1" in
+        start)
+                start
+                ;;
+        stop)
+                stop
+                ;;
+        restart)
+                $0 stop
+                $0 start
+                ;;
+        status)
+                status
+                ;;
+        *)
+                ## If no parameters are given, print which are avaiable.
+                echo "Usage: $0 {start|stop|status|restart}"
+                exit 1
+                ;;
+esac

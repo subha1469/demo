@@ -1,0 +1,10 @@
+---
+- hosts: all
+  become: yes
+  roles:
+    - { role: monit, tags: monit }
+
+- hosts: tomcat8
+  become: yes
+  roles:
+    - { role: tomcat8, tags: tomcat8 }

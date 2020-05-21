@@ -1,0 +1,7 @@
+---
+- name: CSM JBoss Entry Point
+  hosts: all
+  become: yes
+
+#- include: sysprep.yml
+- include: jboss.yml

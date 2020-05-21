@@ -1,0 +1,174 @@
+---
+- name: Remove yum cache
+  command: rm -rf /var/cache/yum/*
+  tags: yum
+
+- name: Clean yum data
+  command: yum clean all
+  tags: yum
+
+- name: Install JDKs
+  yum: name={{item}} state=latest
+  with_items:
+    - java-1.8.0-openjdk-devel
+  notify: restart tomcat7
+  tags: yum
+
+- name: Copy tomcat7.repo
+  template: src=templates/tomcat7.repo.j2 dest=/etc/yum.repos.d/SharedHosting.repo backup=yes
+  tags: yum
+
+- name: Install tomcat7 RPMs
+  yum: name={{item}} state=present
+  with_items:
+    - ctomcat7
+  tags: yum
+
+- name: Create {{base_dir}}/tomcat7 directory
+  file: path={{base_dir}}/tomcat7 state=directory owner=tomcat group=root mode=0755
+
+- name: Create {{base_dir}}/logs/tomcat7 directory
+  file: path={{base_dir}}/logs/tomcat7 state=directory owner=tomcat group=tomcat mode=0775
+
+- name: Add default files on {{base_dir}}/tomcat7/conf directory
+  command: cp -r {{base_dir}}/tomcat7/install/conf {{base_dir}}/tomcat7/
+
+- name: Set owner on conf Directory
+  command: chown -R tomcat:tomcat {{base_dir}}/tomcat7/conf
+
+- name: Create {{base_dir}}/tomcat7/logs symlink
+  file: src={{base_dir}}/logs/tomcat7 dest={{base_dir}}/tomcat7/logs state=link
+
+- name: Create {{base_dir}}/tomcat7/temp directory
+  file: path={{base_dir}}/tomcat7/temp state=directory owner=tomcat group=tomcat mode=0775
+
+- name: Create {{base_dir}}/tomcat7/webapps directory
+  file: path={{base_dir}}/tomcat7/webapps state=directory owner=tomcat group=tomcat mode=0775
+
+- name: Create {{base_dir}}/tomcat7/work directory
+  file: path={{base_dir}}/tomcat7/work state=directory owner=tomcat group=tomcat mode=0775
+
+- name: Configure {{base_dir}}/tomcat7/conf/tomcat7.conf
+  template: src=templates/tomcat7.conf.j2 dest={{base_dir}}/tomcat7/conf/tomcat7.conf backup=yes
+  notify: restart tomcat7
+
+- name: Configure {{base_dir}}/tomcat7/conf/server.xml
+  template: src=templates/server.xml.j2 dest={{base_dir}}/tomcat7/conf/server.xml backup=yes
+  notify: restart tomcat7
+
+- name: Configure {{base_dir}}/tomcat7/conf/logging.properties
+  template: src=templates/logging.properties.j2 dest={{base_dir}}/tomcat7/conf/logging.properties backup=yes
+  notify: restart tomcat7
+
+- name: Configure /etc/sysconfig/tomcat7
+  template: src=templates/sysconfig-tomcat7.j2 dest=/etc/sysconfig/tomcat7 backup=yes
+  notify: restart tomcat7
+
+- name: Copy statup script
+  copy: src=tomcat7 dest=/etc/init.d/tomcat7 owner=root group=root mode="0755" force=no
+  notify: restart tomcat7
+
+- name: Configure /etc/logrotate.d/tomcat7
+  template: src=templates/logrotate-tomcat7.j2 dest=/etc/logrotate.d/tomcat7
+  notify: restart tomcat7
+
+# ----------- START: SSL section
+- name: Create {{base_dir}}/tomcat7/security directory
+  file: path={{base_dir}}/tomcat7/security state=directory owner=tomcat group=tomcat
+
+- name: Copy {{base_dir}}/tomcat7/security/keystore.jks
+  copy: src=keystore.jks dest={{base_dir}}/tomcat7/security/keystore.jks force=no owner=tomcat group=tomcat
+  notify: restart tomcat7
+
+- name: Copy /etc/pki/java/hpca2ssG2_ns.crt
+  copy: src=hpca2ssG2_ns.crt dest=/etc/pki/java/hpca2ssG2_ns.crt force=no
+
+- name: Import hpca2ssG2_ns.crt into /etc/pki/java/cacerts
+  command: /usr/bin/keytool -import -alias hpca2 -noprompt -trustcacerts -file /etc/pki/java/hpca2ssG2_ns.crt -storepass changeit -keystore /etc/pki/java/cacerts
+  ignore_errors: yes
+  changed_when: False
+
+- name: Copy /etc/pki/java/hpca2_recertified_ns.crt
+  copy: src=hpca2_recertified_ns.crt dest=/etc/pki/java/hpca2_recertified_ns.crt force=no
+
+- name: Import hpca2_recertified_ns.crt into /etc/pki/java/cacerts
+  command: /usr/bin/keytool -import -alias hpca2_rec -noprompt -trustcacerts -file /etc/pki/java/hpca2_recertified_ns.crt -storepass changeit -keystore /etc/pki/java/cacerts
+  ignore_errors: yes
+  changed_when: False
+# ----------- END: SSL section
+
+# ----------- START: ROOT welcome webapp section
+# Creating each directory and file like this (for exploded deploy) turned out to be simpler than the current workarounds available for recursive copying.
+- name: Create {{base_dir}}/tomcat7/webapps/ROOT directory
+  file: path={{base_dir}}/tomcat7/webapps/ROOT state=directory owner=tomcat group=tomcat mode=0755
+
+- name: Create {{base_dir}}/tomcat7/webapps/ROOT/WEB-INF directory
+  file: path={{base_dir}}/tomcat7/webapps/ROOT/WEB-INF state=directory owner=tomcat group=tomcat mode=0755
+
+- name: Create {{base_dir}}/tomcat7/webapps/ROOT/META-INF directory
+  file: path={{base_dir}}/tomcat7/webapps/ROOT/META-INF state=directory owner=tomcat group=tomcat mode=0755
+
+- name: Copy {{base_dir}}/tomcat7/webapps/ROOT/WEB-INF/web.xml
+  copy: src=webapps/ROOT/WEB-INF/web.xml dest={{base_dir}}/tomcat7/webapps/ROOT/WEB-INF/ owner=tomcat group=tomcat mode=0644 force=no
+  notify: restart tomcat7
+
+- name: Copy {{base_dir}}/tomcat7/webapps/ROOT/META-INF/MANIFEST.MF
+  copy: src=webapps/ROOT/META-INF/MANIFEST.MF dest={{base_dir}}/tomcat7/webapps/ROOT/META-INF/ owner=tomcat group=tomcat mode=0644 force=no
+  notify: restart tomcat7
+
+- name: Copy {{base_dir}}/tomcat7/webapps/ROOT/ROOT/index.jsp
+  copy: src=webapps/ROOT/index.jsp dest={{base_dir}}/tomcat7/webapps/ROOT/index.jsp owner=tomcat group=tomcat mode=0644 force=no
+  notify: restart tomcat7
+# ----------- END: ROOT welcome webapp section
+
+# ----------- START: DO_NOT_REMOVE health check webapp section
+# Creating each directory and file like this (for exploded deploy) turned out to be simpler than the current workarounds available for recursive copying.
+- name: Create {{base_dir}}/tomcat7/webapps/DO_NOT_REMOVE directory
+  file: path={{base_dir}}/tomcat7/webapps/DO_NOT_REMOVE state=directory owner=tomcat group=tomcat mode=0755
+
+- name: Create {{base_dir}}/tomcat7/webapps/DO_NOT_REMOVE/WEB-INF directory
+  file: path={{base_dir}}/tomcat7/webapps/DO_NOT_REMOVE/WEB-INF state=directory owner=tomcat group=tomcat mode=0755
+
+- name: Create {{base_dir}}/tomcat7/webapps/DO_NOT_REMOVE/META-INF directory
+  file: path={{base_dir}}/tomcat7/webapps/DO_NOT_REMOVE/META-INF state=directory owner=tomcat group=tomcat mode=0755
+
+- name: Copy {{base_dir}}/tomcat7/webapps/DO_NOT_REMOVE/WEB-INF/web.xml
+  copy: src=webapps/DO_NOT_REMOVE/WEB-INF/web.xml dest={{base_dir}}/tomcat7/webapps/DO_NOT_REMOVE/WEB-INF/ owner=tomcat group=tomcat mode=0644 force=no
+  notify: restart tomcat7
+
+- name: Copy {{base_dir}}/tomcat7/webapps/DO_NOT_REMOVE/META-INF/MANIFEST.MF
+  copy: src=webapps/DO_NOT_REMOVE/META-INF/MANIFEST.MF dest={{base_dir}}/tomcat7/webapps/DO_NOT_REMOVE/META-INF/ owner=tomcat group=tomcat mode=0644 force=no
+  notify: restart tomcat7
+
+- name: Copy {{base_dir}}/tomcat7/webapps/DO_NOT_REMOVE/health_check.jsp
+  copy: src=webapps/DO_NOT_REMOVE/health_check.jsp dest={{base_dir}}/tomcat7/webapps/DO_NOT_REMOVE/ owner=tomcat group=tomcat mode=0644 force=no
+  notify: restart tomcat7
+
+- name: Copy {{base_dir}}/tomcat7/webapps/DO_NOT_REMOVE/health_check.html
+  copy: src=webapps/DO_NOT_REMOVE/health_check.html dest={{base_dir}}/tomcat7/webapps/DO_NOT_REMOVE/ owner=tomcat group=tomcat mode=0644 force=no
+  notify: restart tomcat7
+# ----------- END: DO_NOT_REMOVE health check webapp section
+
+# ----------- START: Tomcat Manager section
+- name: Copy webapps/manager
+  command: cp -r {{base_dir}}/tomcat7/install/webapps/manager {{base_dir}}/tomcat7/webapps
+  notify: restart tomcat7
+
+- name: Copy webapps/manager
+  command: chown -R tomcat:tomcat {{base_dir}}/tomcat7/webapps/manager
+  notify: restart tomcat7
+
+- name: Copy {{base_dir}}/tomcat7/webapps/manager/WEB-INF/web.xml
+  copy: src=web.xml dest={{base_dir}}/tomcat7/webapps/manager/WEB-INF/web.xml
+  notify: restart tomcat7
+# ----------- END: Tomcat Manager section
+
+- name: Ensure tomcat7 is running (and enable to autostart)
+  service: name=tomcat7 enabled=yes state=started
+
+- name: Configure /etc/monit.d/httpd file
+  template: src=templates/monit-tomcat7.j2 dest=/etc/monit.d/tomcat7
+  notify: restart monit
+
+- name: Configure motd
+  template: src=templates/motd.j2 dest=/etc/motd

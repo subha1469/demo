@@ -1,0 +1,35 @@
+---
+- name: Install collectl to capture OS metrics
+  hosts: all
+  sudo: yes
+
+  tasks:
+
+    #- name: install HPIT EPEL repo
+    #  action: yum name=hpit-yum-epel-repo state=latest
+
+    #- name: Install collectl 
+    #  action: yum name=collectl state=latest enablerepo=RedHat-6Server-x86_64-Fedora-EPEL
+
+    - name: Install collectl 
+      action: command yum install --enablerepo=*EPEL* -y collectl
+
+    - name: Configure /etc/init.d/collectl (start up args)
+      action: template src=templates/etc/init.d/collectl dest=/etc/init.d/collectl
+      notify: restart collectl
+    
+    - name: Configure /etc/sysconfig/collectl (start up args)
+      action: template src=templates/etc/sysconfig/collectl dest=/etc/sysconfig/collectl
+      notify: restart collectl
+    
+    - name: Configure /etc/collectl.conf
+      action: template src=templates/etc/collectl.conf dest=/etc/collectl.conf
+      notify: restart collectl
+
+    - name: Enable collectl as a service
+      action: service name=collectl enabled=yes state=started
+
+  handlers:
+    - name: restart collectl
+      action: service name=collectl state=restarted
+

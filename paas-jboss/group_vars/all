@@ -1,0 +1,2 @@
+# These are variables (in yaml) that apply to all inventory
+base_dir: /opt/cloudhost
