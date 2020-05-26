@@ -1,0 +1,19 @@
+---
+- name: Copy tomcat7.repo
+  template: src=templates/tomcat7.repo.j2 dest=/etc/zypp/repos.d/SharedHosting.repo backup=yes
+  tags: yum
+
+#- name: Install SharedHosting repo
+#  yum: name=hpit-yum-dash-repo state=latest
+#  tags: yum
+
+- name: Install Monit
+  yum: name=monit state=latest
+  tags: yum
+
+- name: Configure /etc/monitrc file
+  template: src=templates/monitrc.j2 dest=/etc/monitrc
+  notify: restart monit
+
+- name: Ensure Monit is running (and enable to autostart)
+  action: service name=monit enabled=yes state=started
