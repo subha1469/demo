@@ -1,15 +1,15 @@
 ---
 - name: Copy tomcat7.repo
   template: src=templates/tomcat7.repo.j2 dest=/etc/zypp/repos.d/SharedHosting.repo backup=yes
-  tags: yum
+  tags: zypper
 
 #- name: Install SharedHosting repo
 #  yum: name=hpit-yum-dash-repo state=latest
 #  tags: yum
 
 - name: Install Monit
-  yum: name=monit state=latest
-  tags: yum
+  zypper: name=monit state=latest
+  tags: zypper
 
 - name: Configure /etc/monitrc file
   template: src=templates/monitrc.j2 dest=/etc/monitrc
