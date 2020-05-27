@@ -1,0 +1,18 @@
+[Unit]
+Description=Tomcat8 - instance
+After=syslog.target network.target
+
+[Service]
+Type=forking
+
+EnvironmentFile=-/etc/sysconfig/tomcat8
+
+User=tomcat
+Group=tomcat
+
+ExecStart={{catalina_home}}/bin/startup.sh
+ExecStop={{catalina_home}}/bin/shutdown.sh
+
+
+[Install]
+WantedBy=multi-user.target

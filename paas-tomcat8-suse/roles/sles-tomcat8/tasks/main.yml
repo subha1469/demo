@@ -1,0 +1,170 @@
+---
+- name: Remove zypper cache
+  command: rm -rf /var/cache/zypper/*
+  tags: zypper
+
+- name: Clean zypper data
+  command: zypper clean
+  tags: zypper
+
+- name: Install JDKs
+  zypper: name={{item}} state=latest
+  with_items:
+    - java-1_8_0-openjdk-devel
+  notify: restart tomcat8
+  tags: zypper
+
+- name: Copy tomcat8.repo
+  template: src=tomcat8.repo.j2 dest=/etc/zypp/repos.d/SharedHosting.repo backup=yes
+  tags: zypper
+
+- name: Install tomcat8 RPMs
+  zypper: name={{item}} state=present
+  with_items:
+    - ctomcat8
+  tags: zypper
+
+- name: Create {{base_dir}}/tomcat8 directory
+  file: path={{base_dir}}/tomcat8 state=directory owner=tomcat group=root mode=0755
+
+- name: Create {{base_dir}}/logs/tomcat8 directory
+  file: path={{base_dir}}/logs/tomcat8 state=directory owner=tomcat group=tomcat mode=0755
+
+- name: Add default files on {{base_dir}}/tomcat8/conf directory
+  command: cp -r {{base_dir}}/tomcat8/install/conf {{base_dir}}/tomcat8/
+
+- name: Set owner on conf Directory
+  command: chown -R tomcat:tomcat {{base_dir}}/tomcat8/conf
+
+- name: Create {{base_dir}}/tomcat8/logs symlink
+  file: src={{base_dir}}/logs/tomcat8 dest={{base_dir}}/tomcat8/logs state=link
+
+- name: Create {{base_dir}}/tomcat8/temp directory
+  file: path={{base_dir}}/tomcat8/temp state=directory owner=tomcat group=tomcat mode=0775
+
+- name: Create {{base_dir}}/tomcat8/webapps directory
+  file: path={{base_dir}}/tomcat8/webapps state=directory owner=tomcat group=tomcat mode=0775
+
+- name: Create {{base_dir}}/tomcat8/work directory
+  file: path={{base_dir}}/tomcat8/work state=directory owner=tomcat group=tomcat mode=0775
+
+- name: Configure {{base_dir}}/tomcat8/conf/server.xml
+  template: src=server.xml.j2 dest={{base_dir}}/tomcat8/conf/server.xml backup=yes
+  notify: restart tomcat8
+
+- name: Configure {{base_dir}}/tomcat8/conf/logging.properties
+  template: src=logging.properties.j2 dest={{base_dir}}/tomcat8/conf/logging.properties backup=yes
+  notify: restart tomcat8
+
+- name: Configure /etc/sysconfig/tomcat8
+  template: src=sysconfig-tomcat8.j2 dest=/etc/sysconfig/tomcat8 backup=yes
+  notify: restart tomcat8
+
+- name: Copy statup unit script
+  template: src=templates/tomcat8.service.j2 dest=/usr/lib/systemd/system/tomcat8.service owner=root group=root mode="0644" force=no
+  notify: restart tomcat8
+
+- name: Configure /etc/logrotate.d/tomcat8
+  template: src=logrotate-tomcat8.j2 dest=/etc/logrotate.d/tomcat8
+  notify: restart tomcat8
+
+# ----------- START: SSL section
+- name: Create {{base_dir}}/tomcat8/security directory
+  file: path={{base_dir}}/tomcat8/security state=directory owner=tomcat group=tomcat
+
+- name: Copy {{base_dir}}/tomcat8/security/keystore.jks
+  copy: src=keystore.jks dest={{base_dir}}/tomcat8/security/keystore.jks force=no owner=tomcat group=tomcat
+  notify: restart tomcat8
+
+#- name: Copy /etc/pki/java/hpca2ssG2_ns.crt
+#  copy: src=hpca2ssG2_ns.crt dest=/etc/pki/java/hpca2ssG2_ns.crt force=no
+
+#- name: Import hpca2ssG2_ns.crt into /etc/pki/java/cacerts
+#  command: /usr/bin/keytool -import -alias hpca2 -noprompt -trustcacerts -file /etc/pki/java/hpca2ssG2_ns.crt -storepass changeit -keystore /etc/pki/java/cacerts
+#  ignore_errors: yes
+#  changed_when: False
+
+#- name: Copy /etc/pki/java/hpca2_recertified_ns.crt
+#  copy: src=hpca2_recertified_ns.crt dest=/etc/pki/java/hpca2_recertified_ns.crt force=no
+
+#- name: Import hpca2_recertified_ns.crt into /etc/pki/java/cacerts
+#  command: /usr/bin/keytool -import -alias hpca2_rec -noprompt -trustcacerts -file /etc/pki/java/hpca2_recertified_ns.crt -storepass changeit -keystore /etc/pki/java/cacerts
+#  ignore_errors: yes
+#  changed_when: False
+# ----------- END: SSL section
+
+# ----------- START: ROOT welcome webapp section
+# Creating each directory and file like this (for exploded deploy) turned out to be simpler than the current workarounds available for recursive copying.
+- name: Create {{base_dir}}/tomcat8/webapps/ROOT directory
+  file: path={{base_dir}}/tomcat8/webapps/ROOT state=directory owner=tomcat group=tomcat mode=0755
+
+- name: Create {{base_dir}}/tomcat8/webapps/ROOT/WEB-INF directory
+  file: path={{base_dir}}/tomcat8/webapps/ROOT/WEB-INF state=directory owner=tomcat group=tomcat mode=0755
+
+- name: Create {{base_dir}}/tomcat8/webapps/ROOT/META-INF directory
+  file: path={{base_dir}}/tomcat8/webapps/ROOT/META-INF state=directory owner=tomcat group=tomcat mode=0755
+
+- name: Copy {{base_dir}}/tomcat8/webapps/ROOT/WEB-INF/web.xml
+  copy: src=webapps/ROOT/WEB-INF/web.xml dest={{base_dir}}/tomcat8/webapps/ROOT/WEB-INF/ owner=tomcat group=tomcat mode=0644 force=no
+  notify: restart tomcat8
+
+- name: Copy {{base_dir}}/tomcat8/webapps/ROOT/META-INF/MANIFEST.MF
+  copy: src=webapps/ROOT/META-INF/MANIFEST.MF dest={{base_dir}}/tomcat8/webapps/ROOT/META-INF/ owner=tomcat group=tomcat mode=0644 force=no
+  notify: restart tomcat8
+
+- name: Copy {{base_dir}}/tomcat8/webapps/ROOT/ROOT/index.jsp
+  copy: src=webapps/ROOT/index.jsp dest={{base_dir}}/tomcat8/webapps/ROOT/index.jsp owner=tomcat group=tomcat mode=0644 force=no
+  notify: restart tomcat8
+# ----------- END: ROOT welcome webapp section
+
+# ----------- START: DO_NOT_REMOVE health check webapp section
+# Creating each directory and file like this (for exploded deploy) turned out to be simpler than the current workarounds available for recursive copying.
+- name: Create {{base_dir}}/tomcat8/webapps/DO_NOT_REMOVE directory
+  file: path={{base_dir}}/tomcat8/webapps/DO_NOT_REMOVE state=directory owner=tomcat group=tomcat mode=0755
+
+- name: Create {{base_dir}}/tomcat8/webapps/DO_NOT_REMOVE/WEB-INF directory
+  file: path={{base_dir}}/tomcat8/webapps/DO_NOT_REMOVE/WEB-INF state=directory owner=tomcat group=tomcat mode=0755
+
+- name: Create {{base_dir}}/tomcat8/webapps/DO_NOT_REMOVE/META-INF directory
+  file: path={{base_dir}}/tomcat8/webapps/DO_NOT_REMOVE/META-INF state=directory owner=tomcat group=tomcat mode=0755
+
+- name: Copy {{base_dir}}/tomcat8/webapps/DO_NOT_REMOVE/WEB-INF/web.xml
+  copy: src=webapps/DO_NOT_REMOVE/WEB-INF/web.xml dest={{base_dir}}/tomcat8/webapps/DO_NOT_REMOVE/WEB-INF/ owner=tomcat group=tomcat mode=0644 force=no
+  notify: restart tomcat8
+
+- name: Copy {{base_dir}}/tomcat8/webapps/DO_NOT_REMOVE/META-INF/MANIFEST.MF
+  copy: src=webapps/DO_NOT_REMOVE/META-INF/MANIFEST.MF dest={{base_dir}}/tomcat8/webapps/DO_NOT_REMOVE/META-INF/ owner=tomcat group=tomcat mode=0644 force=no
+  notify: restart tomcat8
+
+- name: Copy {{base_dir}}/tomcat8/webapps/DO_NOT_REMOVE/health_check.jsp
+  copy: src=webapps/DO_NOT_REMOVE/health_check.jsp dest={{base_dir}}/tomcat8/webapps/DO_NOT_REMOVE/ owner=tomcat group=tomcat mode=0644 force=no
+  notify: restart tomcat8
+
+- name: Copy {{base_dir}}/tomcat8/webapps/DO_NOT_REMOVE/health_check.html
+  copy: src=webapps/DO_NOT_REMOVE/health_check.html dest={{base_dir}}/tomcat8/webapps/DO_NOT_REMOVE/ owner=tomcat group=tomcat mode=0644 force=no
+  notify: restart tomcat8
+# ----------- END: DO_NOT_REMOVE health check webapp section
+
+# ----------- START: Tomcat Manager section
+- name: Copy webapps/manager
+  command: cp -r {{base_dir}}/tomcat8/install/webapps/manager {{base_dir}}/tomcat8/webapps
+  notify: restart tomcat8
+
+- name: Copy webapps/manager
+  command: chown -R tomcat:tomcat {{base_dir}}/tomcat8/webapps/manager
+  notify: restart tomcat8
+
+# ----------- END: Tomcat Manager section
+
+- name: Add tomcat8 as service
+  command: chkconfig tomcat8 on
+
+- name: Ensure tomcat8 is running (and enable to autostart)
+  service: name=tomcat8 enabled=yes state=started
+
+- name: Configure /etc/monit.d/httpd file
+  template: src=monit-tomcat8.j2 dest=/etc/monit.d/tomcat8
+  notify: restart monit
+
+#- name: Configure motd
+#  template: src=motd.j2 dest=/etc/motd

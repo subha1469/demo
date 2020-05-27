@@ -1,0 +1,39 @@
+##############################################################################
+##############################################################################
+# Service-specific configuration file for tomcat8. This will be sourced by
+# the unit script and added to your tomcat8 instance automatically.
+#
+# NEVER change the unit script itself. To change values for tomcat make
+# your changes in /etc/sysconfig/tomcat8
+#
+# To change values for a specific parameter make your edits here.
+##############################################################################
+##############################################################################
+#Tomcat configuration
+## Tomcat base directory.
+CATALINA_BASE="{{catalina_base}}"
+
+## Tomcat Binary files
+CATALINA_HOME="{{catalina_home}}"
+
+## Tomcat temp directory
+CATALINA_TMPDIR="{{catalina_base}}/temp"
+
+## Options for your JVM
+JAVA_OPTS="-Xms1024m -Xmx1024m -XX:+PrintGCDetails -XX:+PrintGCTimeStamps"
+
+## Run tomcat under the Java Security Manager
+SECURITY_MANAGER="false"
+
+## Time to wait in seconds, before killing process
+SHUTDOWN_WAIT="30"
+SHUTDOWN_VERBOSE="false"
+
+## Tomcat PID FILE
+CATALINA_PID="{{catalina_base}}/logs/tomcat8.pid"
+
+# Enable remote JMX management
+#CATALINA_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port={{jmx_port}} -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+
+# You can change your tomcat locale here
+#LANG="en_US"
