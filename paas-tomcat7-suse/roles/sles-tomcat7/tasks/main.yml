@@ -1,14 +1,14 @@
 ---
-- name: Remove yum cache
+- name: Remove zypper cache
   command: rm -rf /var/cache/zypper/*
   tags: zypper
 
-- name: Clean yum data
+- name: Clean zypper data
   command: zypper clean
   tags: zypper
 
 - name: Install JDKs
-  yum: name={{item}} state=latest
+  zypper: name={{item}} state=latest
   with_items:
     - java-1_8_0-openjdk-devel
   notify: restart tomcat7
@@ -19,7 +19,7 @@
   tags: zypper
 
 - name: Install tomcat7 RPMs
-  yum: name={{item}} state=present
+  zypper: name={{item}} state=present
   with_items:
     - ctomcat7
   tags: zypper
