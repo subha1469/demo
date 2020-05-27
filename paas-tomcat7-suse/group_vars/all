@@ -6,3 +6,4 @@ ajp_port: 8009
 jmx_port: 8090
 catalina_base: "{{base_dir}}/tomcat7"
 catalina_home: "{{base_dir}}/tomcat7/install"
+reposerver: "m4t0203.houston.softwaregrp.net"
