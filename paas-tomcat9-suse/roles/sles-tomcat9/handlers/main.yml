@@ -1,0 +1,12 @@
+---
+- name: restart monit
+  action: service name=monit state=restarted
+
+- name: restart tomcat9
+  action: service name=tomcat9 state=restarted
+
+- name: stop tomcat9
+  action: service name=tomcat9 state=stopped
+
+- name: start tomcat9
+  action: service name=tomcat9 state=started

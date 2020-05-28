@@ -1,0 +1,9 @@
+---
+base_dir: /opt/cloudhost
+http_port: 8080
+https_port: 8443
+ajp_port: 8009
+jmx_port: 8090
+catalina_base: "{{base_dir}}/tomcat9"
+catalina_home: "{{base_dir}}/tomcat9/install"
+reposerver: "m4t0203.houston.softwaregrp.net"

@@ -1,0 +1,12 @@
+---
+- hosts: all
+  become: yes
+  become_user: root
+  roles:
+    - { role: monit, tags: monit }
+
+- hosts: tomcat9
+  become: yes
+  become_user: root
+  roles:
+    - { role: sles-tomcat9, tags: tomcat9 }
