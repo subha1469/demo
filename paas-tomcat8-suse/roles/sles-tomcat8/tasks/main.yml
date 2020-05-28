@@ -162,7 +162,7 @@
 - name: Ensure tomcat8 is running (and enable to autostart)
   service: name=tomcat8 enabled=yes state=started
 
-- name: Configure /etc/monit.d/httpd file
+- name: Configure /etc/monit.d/tomcat8 file
   template: src=monit-tomcat8.j2 dest=/etc/monit.d/tomcat8
   notify: restart monit
 
