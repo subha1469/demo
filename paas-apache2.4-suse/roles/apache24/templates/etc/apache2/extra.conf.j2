@@ -1,0 +1,9 @@
+#CIS Apache HTTP Server 2.4 Benchmark - configurations
+TraceEnable off
+RewriteEngine On
+RewriteCond %{THE_REQUEST} !HTTP/1\.1$
+RewriteRule .* - [F]
+CoreDumpDirectory "{{apache_logs_dir}}"
+
+Include /etc/apache2/proxy_ajp.conf
+Include /etc/apache2/weblogic.conf

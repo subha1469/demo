@@ -1,0 +1,10 @@
+# These are variables (in yaml) that apply to all inventory
+base_dir: /opt/cloudhost
+owner: paasweb
+group: paaswebgrp
+http_port: 80
+https_port: 443
+ssl_enabled: "yes"
+apache_content_dir: "{{base_dir}}/apache/www"
+apache_logs_dir: "{{base_dir}}/logs/apache"
+reposerver: "m4t0203.houston.softwaregrp.net"

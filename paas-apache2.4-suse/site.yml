@@ -1,0 +1,10 @@
+---
+#- hosts: all
+#  become: yes
+#  roles:
+#    - { role: monit, tags: monit }
+
+- hosts: webservers
+  become: yes
+  roles:
+    - { role: apache24, tags: apache }

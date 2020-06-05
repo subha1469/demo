@@ -1,0 +1,12 @@
+{{apache_logs_dir}}/*log {
+    daily
+    rotate 90
+    compress
+    missingok
+    notifempty
+    sharedscripts
+    delaycompress
+    postrotate
+        /sbin/service apache2 reload > /dev/null 2>/dev/null || true
+    endscript
+}
