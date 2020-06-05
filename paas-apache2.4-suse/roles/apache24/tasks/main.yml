@@ -72,7 +72,7 @@
   notify: restart apache
 
 - name: Configure logrotate
-  template: src=templates/etc/logrotate.d/httpd.j2 dest=/etc/logrotate.d/httpd
+  template: src=templates/etc/logrotate.d/apache2.j2 dest=/etc/logrotate.d/apache2
 
 # ----------- START: SSL section
 
