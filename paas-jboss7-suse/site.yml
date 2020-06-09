@@ -1,0 +1,6 @@
+---
+- hosts: jbossservers
+  become: yes
+  roles:
+    - { role: monit, tags: monit }
+    - { role: jbosseap7, tags: jboss }
