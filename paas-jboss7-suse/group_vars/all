@@ -1,2 +1,6 @@
 # These are variables (in yaml) that apply to all inventory
 base_dir: /opt/cloudhost
+http_port: 8080
+https_port: 8443
+ajp_port: 8009
+reposerver: "m4t0203.houston.softwaregrp.net"
