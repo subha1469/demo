@@ -9,7 +9,7 @@ DocumentRoot "{{apache_content_dir}}/html"
 #
 # Configure the DocumentRoot
 #
-<Directory "{{apache_content_dir}}">
+<Directory "{{apache_content_dir}}/html">
         # Possible values for the Options directive are "None", "All",
         # or any combination of:
         #   Indexes Includes FollowSymLinks SymLinksifOwnerMatch ExecCGI MultiViews
@@ -28,6 +28,9 @@ DocumentRoot "{{apache_content_dir}}/html"
         #   Options FileInfo AuthConfig Limit
         AllowOverride None
         # Controls who can get stuff from this server.
+        <LimitExcept GET POST OPTIONS>
+            Require all denied
+        </LimitExcept>
         <IfModule !mod_access_compat.c>
                 Require all granted
         </IfModule>
@@ -77,9 +80,12 @@ ScriptAlias /cgi-bin/  "{{apache_content_dir}}/cgi-bin"
 # "/srv/www/cgi-bin" should be changed to whatever your ScriptAliased
 # CGI directory exists, if you have that configured.
 #
-<Directory "{{apache_content_dir}}/cgi-bin/">
+<Directory "{{apache_content_dir}}/cgi-bin">
         AllowOverride None
         Options +ExecCGI -Includes
+        <LimitExcept GET POST OPTIONS>
+            Require all denied
+        </LimitExcept>
         <IfModule !mod_access_compat.c>
                 Require all granted
         </IfModule>
