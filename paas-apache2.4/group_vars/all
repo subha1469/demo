@@ -8,7 +8,7 @@ http_port: 80
 https_port: 443
 sitemider_enabled: false
 siteminder_home: /opt/ca/siteminder12
-ssl_enabled: true
+ssl_enabled: yes
 pfagent_enabled: yes
 apache_content_dir: "{{base_dir}}/apache/www"
 apache_logs_dir: "{{base_dir}}/logs/apache"

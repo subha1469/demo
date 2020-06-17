@@ -18,8 +18,8 @@
       file: path=/var/cache/yum state=absent
       file: path=/var/cache/yum state=directory
 
-#    - name: Remove yum cache
-#      command: rm -rf /var/cache/yum/*
+    - name: Remove yum cache
+      command: rm -rf /var/cache/yum/*
 
 
     - name: Clean yum data
@@ -43,22 +43,22 @@
          state: disabled
 
     - name: Create {{base_dir}}/apache
-      action: file path={{base_dir}}/apache state=directory owner={{owner}} group={{group}} mode=0755
+      action: file path={{base_dir}}/apache state=directory owner=root group=root mode=0755
 
     - name: Create {{base_dir}}/apache/www
-      action: file path={{base_dir}}/apache/www state=directory owner={{owner}} group={{group}} mode=0755
+      action: file path={{base_dir}}/apache/www state=directory owner=root group=root mode=0755
 
     - name: Create {{base_dir}}/apache/www/html
-      action: file path={{base_dir}}/apache/www/html state=directory owner={{owner}} group={{group}} mode=0775
+      action: file path={{base_dir}}/apache/www/html state=directory owner=root group={{group}} mode=0775
 
     - name: Create {{base_dir}}/apache/www/cgi-bin
-      action: file path={{base_dir}}/apache/www/cgi-bin state=directory owner={{owner}} group={{group}} mode=0775
+      action: file path={{base_dir}}/apache/www/cgi-bin state=directory owner=root group={{group}} mode=0775
 
     - name: Create {{base_dir}}/apache/www/html/DO_NOT_REMOVE
-      action: file path={{base_dir}}/apache/www/html/DO_NOT_REMOVE state=directory owner={{owner}} group={{group}} mode=0755
+      action: file path={{base_dir}}/apache/www/html/DO_NOT_REMOVE state=directory owner=root group=root mode=0755
 
     - name: Create {{base_dir}}/logs/apache
-      action: file path={{base_dir}}/logs/apache state=directory owner={{owner}} group={{group}} mode=0755
+      action: file path={{base_dir}}/logs/apache state=directory owner=apache group=root mode=0755
 
     - name: Copy over default landing page
       template: src=templates/{{base_dir}}/apache/www/html/index.html.j2 dest={{base_dir}}/apache/www/html/index.html owner={{owner}} group={{group}} mode=0644
