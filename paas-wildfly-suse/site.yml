@@ -1,0 +1,6 @@
+---
+- hosts: wildflyservers
+  become: yes
+  roles:
+    - { role: monit, tags: monit }
+    - { role: sles-wildfly, tags: wildfly }

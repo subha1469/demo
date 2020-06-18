@@ -1,0 +1,29 @@
+# Location of JDK
+#JAVA_HOME=""
+
+# Location of JBoss EAP HOME and BASE
+JBOSS_HOME="/opt/cloudhost/wildfly10/install"
+JBOSS_BASE="/opt/cloudhost/wildfly10/standalone"
+
+# The mode Wildfly should start, standalone or domain
+JBOSS_MODE=standalone
+
+## Configuration file for standalone mode
+JBOSS_CONFIG=standalone-full-ha.xml
+
+## Java Options
+JAVA_OPTS="-Xms1024m -Xmx1024m -Djava.net.preferIPv4Stack=true -Dorg.jboss.resolver.warning=true -Dsun.rmi.dgc.client.gcInterval=3600000"
+JAVA_OPTS="$JAVA_OPTS -Dsun.rmi.dgc.server.gcInterval=3600000 -Djboss.modules.system.pkgs=org.jboss.byteman -Djava.awt.headless=true"
+
+## Jboss process ID file
+JBOSS_PIDFILE=/opt/cloudhost/wildfly10/standalone/log/jboss-eap.pid
+
+# AIS startupt options, don not edit this manually.
+APP_NAME=wildfly10
+APP_USER=wildfly
+APP_GROUP=wildfly
+APP_HOME=$JBOSS_HOME
+APP_BASE=$JBOSS_BASE
+APP_CTL="$APP_HOME/bin/wildfly-ctl.sh"
+PORT_OFFSET=0
+STANDALONE_MODE=$JBOSS_CONFIG

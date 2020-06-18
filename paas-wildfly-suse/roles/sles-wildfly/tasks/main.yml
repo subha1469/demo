@@ -1,0 +1,85 @@
+---
+- name: Validate Setup
+  action: fail msg="Missing needed vars!"
+  with_items: [ $base_dir, $http_port, $https_port, $ajp_port ]
+  when: item is not defined
+
+- name: Remove zypper cache
+  command: rm -rf /var/cache/zypper/*
+
+- name: Clean zyppper data
+  command: zypper clean
+
+- name: Copy SharedHosting.repo
+  template: src=templates/etc/zypp/repos.d/SharedHosting.repo.j2 dest=/etc/zypp/repos.d/SharedHosting.repo backup=yes
+  tags: zypper
+
+- name: Install JDK 1.8 if is not already there
+  action: zypper name={{item}} state=latest
+  with_items:
+     - java-1_8_0-openjdk-devel
+  tags: zypper
+
+- name: Install Wildfly packages
+  action: zypper name={{item}} state=latest
+  with_items:
+     - cwildfly10
+  tags: zypper
+
+- name: Create Jboss Base dir
+  command: cp -pr {{base_dir}}/wildfly10/install/standalone {{base_dir}}/wildfly10/
+  ignore_errors: yes
+
+- name: Create {{base_dir}}/logs/wildfly10 directory
+  file: path={{base_dir}}/logs/wildfly10 state=directory owner=jboss group=jboss mode=0775
+
+- name: Log Destination link
+  file: src=/opt/cloudhost/logs/wildfly10/ dest=/opt/cloudhost/wildfly10/standalone/log owner=wildfly group=wildfly state=link
+
+- name: Configure {{base_dir}}/wildfly10/standalone/configuration/standalone.xml
+  template: src=templates/{{base_dir}}/wildfly10/standalone/configuration/{{item.source}} dest={{base_dir}}/wildfly10/standalone/configuration/{{item.dest}} owner=wildfly group=wildfly mode=0644
+  with_items:
+    - {source: 'standalone.xml.j2' , dest: 'standalone.xml'}
+    - {source: 'standalone-ha.xml.j2' , dest: 'standalone-ha.xml'}
+    - {source: 'standalone-full.xml.j2' , dest: 'standalone-full.xml'}
+    - {source: 'standalone-full-ha.xml.j2' , dest: 'standalone-full-ha.xml'}
+    - {source: 'mgmt-users.properties.j2' , dest: 'mgmt-users.properties'}
+  notify: restart wildfly
+
+    # ----------- START: Deploy default content
+- name: Push Default Content
+  copy: src=files/opt/cloudhost/wildfly10/standalone/deployments/DO_NOT_REMOVE.war dest=/opt/cloudhost/wildfly10/standalone/deployments/DO_NOT_REMOVE.war owner=wildfly group=wildfly mode=0644 force=no
+    # ----------- END: Deploy default content
+
+    # ----------- START: Service configuration
+- name: Configure /etc/sysconfig/wildfly10
+  template: src=templates/etc/sysconfig/wildfly10.conf.j2 dest=/etc/sysconfig/wildfly10.conf
+  notify: restart wildfly
+
+- name: Configure unit
+  copy: src=files/usr/lib/systemd/system/wildfly10.service dest=/usr/lib/systemd/system/wildfly10.service owner=root group=root mode=0644
+  notify: restart wildfly
+
+- name: Configure /etc/logrotate.d/wildfly10
+  template: src=templates/etc/logrotate.d/wildfly10.j2 dest=/etc/logrotate.d/wildfly10
+  notify: restart wildfly
+
+    # ----------- END: Service configuration
+    # ----------- START: SSL section
+- name: Create {{base_dir}}/wildfly/security directory
+  file: path={{base_dir}}/wildfly10/security state=directory owner=wildfly group=wildfly mode=0755
+
+- name: Copy {{base_dir}}/wildfly/security/keystore.jks
+  copy: src=files/{{base_dir}}/wildfly10/security/keystore.jks dest={{base_dir}}/wildfly10/security/keystore.jks owner=wildfly group=wildfly mode=0644
+  notify: restart wildfly
+
+    # ----------- END: SSL section
+- name: Configure /etc/monit.d/wildfly10 file
+  template: src=templates/etc/monit.d/wildfly10.j2 dest=/etc/monit.d/wildfly10
+  notify: restart monit
+
+- name: Ensure wildfly is running
+  action: service name=wildfly10 enabled=yes state=started
+
+#- name: Configure motd
+#  template: src=templates/etc/motd.j2 dest=/etc/motd

@@ -1,0 +1,15 @@
+[Unit]
+Description=wildfly10 - instance
+After=syslog.target network.target
+
+[Service]
+Type=forking
+User=wildfly
+Environment=CONFIG_FILE=/etc/sysconfig/wildfly10.conf
+LimitNOFILE=102642
+ExecStart=/opt/cloudhost/wildfly10/install/bin/wildfly-ctl.sh start
+ExecStop=/opt/cloudhost/wildfly10/install/bin/wildfly-ctl.sh stop
+
+
+[Install]
+WantedBy=multi-user.target

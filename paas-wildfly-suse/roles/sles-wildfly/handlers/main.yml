@@ -1,0 +1,12 @@
+---
+- name: restart wildfly
+  action: service name=wildfly10 state=restarted
+
+- name: stop wildfly
+  action: service name=wildfly10 state=stopped
+
+- name: start wildfly
+  action: service name=wildfly10 state=started
+
+- name: restart wildfly
+  action: service name=monit state=restarted
