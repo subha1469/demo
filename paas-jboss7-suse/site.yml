@@ -3,4 +3,4 @@
   become: yes
   roles:
     - { role: monit, tags: monit }
-    - { role: jbosseap7, tags: jboss }
+    - { role: sles-jbosseap7, tags: jboss }

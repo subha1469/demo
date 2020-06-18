@@ -56,10 +56,12 @@
   template: src=templates/{{base_dir}}/jboss/standalone/configuration/mgmt-users.properties.j2 dest={{base_dir}}/jboss/standalone/configuration/mgmt-users.properties owner=jboss group=jboss mode=0644
   notify: restart jboss
 
+    # ----------- START: Deploy default content
+- name: Push Default Content
+  file: src=files/opt/cloudhost/jboss/standalone/deployments/DO_NOT_REMOVE.war dest=/opt/cloudhost/jboss/standalone/deployments/DO_NOT_REMOVE.war
+    # ----------- END: Deploy default content
+    
     # ----------- START: Service configuration
-#- name: Copy control script
-#  copy: src=files/opt/cloudhost/jboss/jbosseap7/bin/jboss-ctl.sh dest=/opt/cloudhost/jboss/jbosseap7/bin/jboss-ctl.sh
-
 - name: Configure /etc/sysconfig/jboss-eap
   template: src=templates/etc/sysconfig/jboss-eap.conf.j2 dest=/etc/sysconfig/jboss-eap.conf
   notify: restart jboss

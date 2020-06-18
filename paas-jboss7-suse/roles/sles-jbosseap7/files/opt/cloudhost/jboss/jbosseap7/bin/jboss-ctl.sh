@@ -129,10 +129,10 @@ else
 fi
 
 if [ -z "$JAVA_HOME" ]; then
-  echo "Error: Proper JAVA_HOME not defined in config file"
-  exit 1
+  echo "No JAVA_HOME defined, default JAVA_HOME will be used instead"
+else
+  export JAVA_HOME
 fi
-export JAVA_HOME
 
 if [ -z "$JAVA_OPTS" ]; then
     echo "Error: Proper JAVA_OPTS not defined in config file"
