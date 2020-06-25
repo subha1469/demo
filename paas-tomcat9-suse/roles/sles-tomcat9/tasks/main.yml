@@ -40,13 +40,13 @@
   file: src={{base_dir}}/logs/tomcat9 dest={{base_dir}}/tomcat9/logs state=link
 
 - name: Create {{base_dir}}/tomcat9/temp directory
-  file: path={{base_dir}}/tomcat9/temp state=directory owner=tomcat group=tomcat mode=0775
+  file: path={{base_dir}}/tomcat9/temp state=directory owner=tomcat group=tomcat mode=0755
 
 - name: Create {{base_dir}}/tomcat9/webapps directory
-  file: path={{base_dir}}/tomcat9/webapps state=directory owner=tomcat group=tomcat mode=0775
+  file: path={{base_dir}}/tomcat9/webapps state=directory owner=tomcat group=tomcat mode=0755
 
 - name: Create {{base_dir}}/tomcat9/work directory
-  file: path={{base_dir}}/tomcat9/work state=directory owner=tomcat group=tomcat mode=0775
+  file: path={{base_dir}}/tomcat9/work state=directory owner=tomcat group=tomcat mode=0755
 
 - name: Configure {{base_dir}}/tomcat9/conf/server.xml
   template: src=server.xml.j2 dest={{base_dir}}/tomcat9/conf/server.xml backup=yes
