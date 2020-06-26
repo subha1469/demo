@@ -11,17 +11,23 @@
 - name: Remove zypper cache
   file: path=/var/cache/zypper state=absent
   file: path=/var/cache/zypper state=directory
+  tags: zypper
 
 - name: Clean zypper data
   command: zypper clean --all
   args:
      warn: no
+  tags: zypper
 
 - name: Install app-AIS-user-paasweb
   zypper: name=app-AIS-user-paasweb state=latest
+  tags: zypper
 
 - name: Install Apache
-  zypper: name=httpd state=present
+  zypper:
+    name: ['apache2', 'apache2-prefork', 'apache2-worker']
+    state: present
+  tags: zypper
 
 - name: Create {{base_dir}}/apache
   action: file path={{base_dir}}/apache state=directory owner={{owner}} group={{group}} mode=0755
