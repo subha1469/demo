@@ -14,8 +14,8 @@
   notify: restart tomcat9
   tags: yum
 
-- name: Copy tomcat9.repo
-  template: src=tomcat9.repo.j2 dest=/etc/yum.repos.d/tomcat9.repo backup=yes
+- name: Copy SharedHosting.repo
+  template: src=templates/tomcat9.repo.j2 dest=/etc/yum.repos.d/SharedHosting.repo backup=yes
   tags: yum
 
 - name: Install tomcat9 RPMs
@@ -48,10 +48,6 @@
 - name: Create {{base_dir}}/tomcat9/work directory
   file: path={{base_dir}}/tomcat9/work state=directory owner=tomcat group=tomcat mode=0775
 
-- name: Configure {{base_dir}}/tomcat9/conf/tomcat9.conf
-  template: src=tomcat9.conf.j2 dest={{base_dir}}/tomcat9/conf/tomcat9.conf backup=yes
-  notify: restart tomcat9
-
 - name: Configure {{base_dir}}/tomcat9/conf/server.xml
   template: src=server.xml.j2 dest={{base_dir}}/tomcat9/conf/server.xml backup=yes
   notify: restart tomcat9
@@ -64,8 +60,8 @@
   template: src=sysconfig-tomcat9.j2 dest=/etc/sysconfig/tomcat9 backup=yes
   notify: restart tomcat9
 
-- name: Copy statup script
-  copy: src=tomcat9 dest=/etc/init.d/tomcat9 owner=root group=root mode=0755 force=no
+- name: Copy statup unit script
+  template: src=templates/tomcat9.service.j2 dest=/usr/lib/systemd/system/tomcat9.service owner=root group=root mode="0644" force=no
   notify: restart tomcat9
 
 - name: Configure /etc/logrotate.d/tomcat9
@@ -158,9 +154,9 @@
   command: chown -R tomcat:tomcat {{base_dir}}/tomcat9/webapps/manager
   notify: restart tomcat9
 
-- name: Copy {{base_dir}}/tomcat9/webapps/manager/WEB-INF/web.xml
-  copy: src=web.xml dest={{base_dir}}/tomcat9/webapps/manager/WEB-INF/web.xml
-  notify: restart tomcat9
+#- name: Copy {{base_dir}}/tomcat9/webapps/manager/WEB-INF/web.xml
+#  copy: src=web.xml dest={{base_dir}}/tomcat9/webapps/manager/WEB-INF/web.xml
+#  notify: restart tomcat9
 # ----------- END: Tomcat Manager section
 
 - name: Add tomcat9 as service
