@@ -1,6 +1,6 @@
 ---
-- name: Copy tomcat9.repo
-  template: src=tomcat9.repo.j2 dest=/etc/yum.repos.d/tomcat9.repo backup=yes
+- name: Copy SharedHosting.repo
+  template: src=templates/tomcat9.repo.j2 dest=/etc/yum.repos.d/SharedHosting.repo backup=yes
   tags: yum
 
 #- name: Install SharedHosting repo
