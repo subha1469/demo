@@ -1,6 +1,6 @@
 ---
 - name: Copy SharedHosting.repo
-  template: src=templates/tomcat9.repo.j2 dest=/etc/yum.repos.d/SharedHosting.repo backup=yes
+  yum: name=DXC-SharedHosting-yum-repo state=latest
   tags: yum
 
 #- name: Install SharedHosting repo

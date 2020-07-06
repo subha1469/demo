@@ -15,8 +15,12 @@
   tags: yum
 
 - name: Copy SharedHosting.repo
-  template: src=templates/tomcat9.repo.j2 dest=/etc/yum.repos.d/SharedHosting.repo backup=yes
+  yum: name=DXC-SharedHosting-yum-repo state=latest
   tags: yum
+
+#- name: Copy SharedHosting.repo
+#  template: src=templates/tomcat9.repo.j2 dest=/etc/yum.repos.d/SharedHosting.repo backup=yes
+#  tags: yum
 
 - name: Install tomcat9 RPMs
   yum: name={{item}} state=present
