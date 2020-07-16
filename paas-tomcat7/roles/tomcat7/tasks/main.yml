@@ -3,10 +3,14 @@
   command: rm -rf /var/cache/yum/*
   tags: yum
 
+- name: Copy SharedHosting.repo
+  yum: name=DXC-SharedHosting-yum-repo state=latest
+  tags: yum
+
 - name: Clean yum data
   command: yum clean all
   tags: yum
-
+  
 - name: Install JDKs
   yum: name={{item}} state=latest
   with_items:
@@ -14,9 +18,9 @@
   notify: restart tomcat7
   tags: yum
 
-- name: Copy tomcat7.repo
-  template: src=templates/tomcat7.repo.j2 dest=/etc/yum.repos.d/SharedHosting.repo backup=yes
-  tags: yum
+#- name: Copy tomcat7.repo
+#  template: src=templates/tomcat7.repo.j2 dest=/etc/yum.repos.d/SharedHosting.repo backup=yes
+#  tags: yum
 
 - name: Install tomcat7 RPMs
   yum: name={{item}} state=present

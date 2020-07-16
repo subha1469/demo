@@ -1,7 +1,11 @@
 ---
-- name: Copy tomcat7.repo
-  template: src=templates/tomcat7.repo.j2 dest=/etc/yum.repos.d/SharedHosting.repo backup=yes
+- name: Copy SharedHosting.repo
+  yum: name=DXC-SharedHosting-yum-repo state=latest
   tags: yum
+
+#- name: Copy tomcat7.repo
+#  template: src=templates/tomcat7.repo.j2 dest=/etc/yum.repos.d/SharedHosting.repo backup=yes
+#  tags: yum
 
 #- name: Install SharedHosting repo
 #  yum: name=hpit-yum-dash-repo state=latest
