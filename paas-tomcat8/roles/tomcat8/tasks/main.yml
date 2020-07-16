@@ -3,6 +3,10 @@
   command: rm -rf /var/cache/yum/*
   tags: yum
 
+- name: Copy SharedHosting.repo
+  yum: name=DXC-SharedHosting-yum-repo state=latest
+  tags: yum
+
 - name: Clean yum data
   command: yum clean all
   tags: yum
@@ -12,10 +16,6 @@
   with_items:
     - java-1.8.0-openjdk-devel
   notify: restart tomcat8
-  tags: yum
-
-- name: Copy tomcat8.repo
-  template: src=tomcat8.repo.j2 dest=/etc/yum.repos.d/tomcat8.repo backup=yes
   tags: yum
 
 - name: Install tomcat8 RPMs
