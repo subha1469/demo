@@ -1,7 +1,7 @@
 ---
 - name: Wildfly
   hosts: wildflyservers
-  sudo: yes
+  become: yes
   tasks:
 
     - name: Validate Setup
@@ -37,11 +37,9 @@
 
     - name: Create {{base_dir}}/logs/wildfly directory
       file: path={{base_dir}}/logs/wildfly10 state=directory owner=wildfly group=wildfly mode=0775
-      register: createloglink
 
     - name: Log Destination link
       file: src=/opt/cloudhost/logs/wildfly10/ dest=/opt/cloudhost/wildfly10/standalone/log owner=wildfly group=wildfly state=link
-      when: createloglink|success
 
     - name: Configure {{base_dir}}/wildfly10/standalone/configuration/standalone.xml
       template: src=templates/{{base_dir}}/wildfly10/standalone/configuration/standalone.xml.j2 dest={{base_dir}}/wildfly10/standalone/configuration/standalone.xml owner=wildfly group=wildfly mode=0644

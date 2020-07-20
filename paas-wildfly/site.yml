@@ -1,7 +1,7 @@
 ---
 - name: CSM WildFly Entry Point
   hosts: all
-  sudo: yes
+  become: yes
 
 #- include: sysprep.yml
 - include: wildfly.yml
