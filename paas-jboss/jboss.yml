@@ -26,8 +26,8 @@
       with_items: [
          java-1.8.0-openjdk]
 
-    - name: Copy JBoss7.repo
-      template: src=templates/etc/yum.repos.d/jboss-eap7.repo.j2 dest=/etc/yum.repos.d/jboss-eap7.repo backup=yes
+    - name: Copy SharedHosting.repo
+      yum: name=DXC-SharedHosting-yum-repo state=latest
       tags: yum
 
     - name: Install EAP packages
