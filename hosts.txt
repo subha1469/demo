@@ -19,8 +19,7 @@
 [wildflyservers]
 
 [jbossservers:vars]
-#base_dir=/opt/cloudhost/jboss
-#http_port=8080
-#https_port=8443
-#ajp_port=8009
-
+base_dir=/opt/cloudhost/jboss
+http_port=8080
+https_port=8443
+ajp_port=8009
