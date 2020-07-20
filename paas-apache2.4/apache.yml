@@ -11,15 +11,14 @@
       when: item is not defined
 
     - name: Copy SharedHosting.repo
-      template: src=templates/etc/yum.repos.d/SharedHosting.repo.j2 dest=/etc/yum.repos.d/SharedHosting.repo
-      tags: yum
+      yum: name=DXC-SharedHosting-yum-repo state=latest
 
     - name: Remove yum cache
       file: path=/var/cache/yum state=absent
       file: path=/var/cache/yum state=directory
 
-    - name: Remove yum cache
-      command: rm -rf /var/cache/yum/*
+#    - name: Remove yum cache
+#      command: rm -rf /var/cache/yum/*
 
 
     - name: Clean yum data
@@ -28,7 +27,7 @@
          warn: no
 
     - name: Install app-AIS-user-paasweb
-      yum: name=app-AIS-user-paasweb state=latest
+      yum: name=app-AIS-user-paasweb state=present
 
     - name: Install Apache
       yum: name=httpd state=present
