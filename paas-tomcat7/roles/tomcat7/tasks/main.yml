@@ -10,7 +10,7 @@
 - name: Clean yum data
   command: yum clean all
   tags: yum
-  
+
 - name: Install JDKs
   yum: name={{item}} state=latest
   with_items:
@@ -32,7 +32,7 @@
   file: path={{base_dir}}/tomcat7 state=directory owner=tomcat group=root mode=0755
 
 - name: Create {{base_dir}}/logs/tomcat7 directory
-  file: path={{base_dir}}/logs/tomcat7 state=directory owner=tomcat group=tomcat mode=0775
+  file: path={{base_dir}}/logs/tomcat7 state=directory owner=tomcat group=tomcat mode=0755
 
 - name: Add default files on {{base_dir}}/tomcat7/conf directory
   command: cp -r {{base_dir}}/tomcat7/install/conf {{base_dir}}/tomcat7/
@@ -44,13 +44,13 @@
   file: src={{base_dir}}/logs/tomcat7 dest={{base_dir}}/tomcat7/logs state=link
 
 - name: Create {{base_dir}}/tomcat7/temp directory
-  file: path={{base_dir}}/tomcat7/temp state=directory owner=tomcat group=tomcat mode=0775
+  file: path={{base_dir}}/tomcat7/temp state=directory owner=tomcat group=tomcat mode=0755
 
 - name: Create {{base_dir}}/tomcat7/webapps directory
-  file: path={{base_dir}}/tomcat7/webapps state=directory owner=tomcat group=tomcat mode=0775
+  file: path={{base_dir}}/tomcat7/webapps state=directory owner=tomcat group=tomcat mode=0755
 
 - name: Create {{base_dir}}/tomcat7/work directory
-  file: path={{base_dir}}/tomcat7/work state=directory owner=tomcat group=tomcat mode=0775
+  file: path={{base_dir}}/tomcat7/work state=directory owner=tomcat group=tomcat mode=0755
 
 - name: Configure {{base_dir}}/tomcat7/conf/tomcat7.conf
   template: src=templates/tomcat7.conf.j2 dest={{base_dir}}/tomcat7/conf/tomcat7.conf backup=yes
