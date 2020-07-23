@@ -28,7 +28,7 @@
   file: path={{base_dir}}/tomcat8 state=directory owner=tomcat group=root mode=0755
 
 - name: Create {{base_dir}}/logs/tomcat8 directory
-  file: path={{base_dir}}/logs/tomcat8 state=directory owner=tomcat group=tomcat mode=0775
+  file: path={{base_dir}}/logs/tomcat8 state=directory owner=tomcat group=tomcat mode=0755
 
 - name: Add default files on {{base_dir}}/tomcat8/conf directory
   command: cp -r {{base_dir}}/tomcat8/install/conf {{base_dir}}/tomcat8/
@@ -40,13 +40,13 @@
   file: src={{base_dir}}/logs/tomcat8 dest={{base_dir}}/tomcat8/logs state=link
 
 - name: Create {{base_dir}}/tomcat8/temp directory
-  file: path={{base_dir}}/tomcat8/temp state=directory owner=tomcat group=tomcat mode=0775
+  file: path={{base_dir}}/tomcat8/temp state=directory owner=tomcat group=tomcat mode=0755
 
 - name: Create {{base_dir}}/tomcat8/webapps directory
-  file: path={{base_dir}}/tomcat8/webapps state=directory owner=tomcat group=tomcat mode=0775
+  file: path={{base_dir}}/tomcat8/webapps state=directory owner=tomcat group=tomcat mode=0755
 
 - name: Create {{base_dir}}/tomcat8/work directory
-  file: path={{base_dir}}/tomcat8/work state=directory owner=tomcat group=tomcat mode=0775
+  file: path={{base_dir}}/tomcat8/work state=directory owner=tomcat group=tomcat mode=0755
 
 - name: Configure {{base_dir}}/tomcat8/conf/tomcat8.conf
   template: src=tomcat8.conf.j2 dest={{base_dir}}/tomcat8/conf/tomcat8.conf backup=yes
