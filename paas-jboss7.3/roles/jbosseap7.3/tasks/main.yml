@@ -61,6 +61,10 @@
   template: src=templates/{{base_dir}}/jboss7.3/standalone/configuration/mgmt-users.properties.j2 dest={{base_dir}}/jboss7.3/standalone/configuration/mgmt-users.properties owner=jboss group=jboss mode=0644
   notify: restart jboss
 
+- name: add jboss-ctl.sh
+  copy: src=files/opt/cloudhost/jboss7.3/jbosseap7.3/bin/jboss-ctl.sh dest={{base_dir}}/jboss7.3/install/bin/jboss-ctl.sh
+  notify: restart jboss
+
 - name: Configure /etc/sysconfig/jboss-eap7.3
   template: src=templates/etc/sysconfig/jboss-eap7.3.conf.j2 dest=/etc/sysconfig/jboss-eap7.3.conf
   notify: restart jboss
