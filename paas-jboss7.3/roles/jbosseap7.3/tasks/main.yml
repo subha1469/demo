@@ -1,0 +1,141 @@
+---
+- name: Validate Setup
+  action: fail msg="Missing needed vars!"
+  with_items: [ $base_dir, $http_port, $https_port, $ajp_port ]
+  when: item is not defined
+
+- name: Remove yum cache
+  command: rm -rf /var/cache/yum/*
+
+- name: Clean yum data
+  command: yum clean all
+
+- name: Remove existing jboss user
+  action: yum name=user-jboss state=absent
+
+#    - name: Install RHEL supplementary repo
+#      action: yum name=hpit-yum-qpk-rhel6-supplementary-repo state=latest
+
+- name: Install JDK
+  action: yum name={{item}} state=latest
+  with_items: [
+    java-1.8.0-openjdk]
+
+- name: Copy SharedHosting.repo
+  yum: name=DXC-SharedHosting-yum-repo state=latest
+  tags: yum
+
+- name: Install EAP packages
+  action: yum name={{item}} state=latest
+  with_items: [
+     cjboss-eap7.3]
+
+- name: Create Jboss Base dir
+  command: cp -pr {{base_dir}}/jboss7.3/install/standalone {{base_dir}}/jboss7.3/
+
+- name: Create {{base_dir}}/logs/jboss7.3 directory
+  file: path={{base_dir}}/logs/jboss7.3 state=directory owner=jboss group=jboss mode=0775
+  #register: createloglink
+
+- name: Log Destination link
+  file: src=/opt/cloudhost/logs/jboss7.3/ dest=/opt/cloudhost/jboss7.3/standalone/log owner=jboss group=jboss state=link
+  #when: createloglink|success
+
+- name: Configure {{base_dir}}/jboss7.3/standalone/configuration/standalone.xml
+  template: src=templates/{{base_dir}}/jboss7.3/standalone/configuration/standalone.xml.j2 dest={{base_dir}}/jboss7.3/standalone/configuration/standalone.xml owner=jboss group=jboss mode=0644
+  notify: restart jboss
+
+- name: Configure {{base_dir}}/jboss7.3/standalone/configuration/standalone-ha.xml
+  template: src=templates/{{base_dir}}/jboss7.3/standalone/configuration/standalone-ha.xml.j2 dest={{base_dir}}/jboss7.3/standalone/configuration/standalone-ha.xml owner=jboss group=jboss mode=0644
+  notify: restart jboss
+
+- name: Configure {{base_dir}}/jboss7.3/standalone/configuration/standalone-full.xml
+  template: src=templates/{{base_dir}}/jboss7.3/standalone/configuration/standalone-full.xml.j2 dest={{base_dir}}/jboss7.3/standalone/configuration/standalone-full.xml owner=jboss group=jboss mode=0644
+  notify: restart jboss
+
+- name: Configure {{base_dir}}/jboss7.3/standalone/configuration/standalone-full-ha.xml
+  template: src=templates/{{base_dir}}/jboss7.3/standalone/configuration/standalone-full-ha.xml.j2 dest={{base_dir}}/jboss7.3/standalone/configuration/standalone-full-ha.xml owner=jboss group=jboss mode=0644
+  notify: restart jboss
+
+- name: Configure {{base_dir}}/jboss7.3/standalone/configuration/mgmt-users.properties
+  template: src=templates/{{base_dir}}/jboss7.3/standalone/configuration/mgmt-users.properties.j2 dest={{base_dir}}/jboss7.3/standalone/configuration/mgmt-users.properties owner=jboss group=jboss mode=0644
+  notify: restart jboss
+
+- name: add jboss-ctl.sh
+  copy: src=files/opt/cloudhost/jboss7.3/jbosseap7.3/bin/jboss-ctl.sh dest={{base_dir}}/jboss7.3/install/bin/jboss-ctl.sh
+  notify: restart jboss
+
+- name: Configure /etc/sysconfig/jboss-eap7.3
+  template: src=templates/etc/sysconfig/jboss-eap7.3.conf.j2 dest=/etc/sysconfig/jboss-eap7.3.conf
+  notify: restart jboss
+
+- name: Configure /etc/logrotate.d/jboss-eap7.3
+  template: src=templates/etc/logrotate.d/jboss-eap7.3.j2 dest=/etc/logrotate.d/jboss-eap7.3
+  notify: restart jboss
+
+- name: Copy /etc/init.d/jboss-eap7.3
+  copy: src=files/usr/lib/systemd/system/jboss-eap7.3.service dest=/usr/lib/systemd/system/jboss-eap7.3.service
+
+- name: deploy DO_NOT_REMOVE app
+  copy: src=files/opt/cloudhost/jboss7.3/standalone/deployments/DO_NOT_REMOVE.war dest={{base_dir}}/jboss7.3/standalone/deployments/DO_NOT_REMOVE.war
+  notify: restart jboss
+
+- name: Install sqlserver module.xml
+  copy: src=files/opt/cloudhost/jboss7.3/jbosseap7.3/modules/system/layers/base/com/microsoft/sqlserver/main/module.xml dest={{base_dir}}/jboss7.3/install/modules/system/layers/base/com/microsoft/sqlserver/main/module.xml
+  notify: restart jboss
+
+- name: Install sqlserver sqljdbc42.jar
+  copy: src=files/opt/cloudhost/jboss7.3/jbosseap7.3/modules/system/layers/base/com/microsoft/sqlserver/main/sqljdbc42.jar dest={{base_dir}}/jboss7.3/install/modules/system/layers/base/com/microsoft/sqlserver/main/sqljdbc42.jar
+  notify: restart jboss
+
+- name: Install mysql module.xml
+  copy: src=files/opt/cloudhost/jboss7.3/jbosseap7.3/modules/system/layers/base/com/mysql/main/module.xml dest={{base_dir}}/jboss7.3/install/modules/system/layers/base/com/mysql/main/module.xml
+  notify: restart jboss
+
+- name: Install mysql sqljdbc42.jar
+  copy: src=files/opt/cloudhost/jboss7.3/jbosseap7.3/modules/system/layers/base/com/mysql/main/mysql-connector-java-5.1.39-bin.jar dest={{base_dir}}/jboss7.3/install/modules/system/layers/base/com/mysql/main/sqljdbc42.jar
+  notify: restart jboss
+
+- name: Install oracle module.xml
+  copy: src=files/opt/cloudhost/jboss7.3/jbosseap7.3/modules/system/layers/base/com/oracle/main/module.xml dest={{base_dir}}/jboss7.3/install/modules/system/layers/base/com/oracle/main/module.xml
+  notify: restart jboss
+
+- name: Install oracle ojdbc7.jar
+  copy: src=files/opt/cloudhost/jboss7.3/jbosseap7.3/modules/system/layers/base/com/oracle/main/ojdbc7.jar dest={{base_dir}}/jboss7.3/install/modules/system/layers/base/com/oracle/main/ojdbc7.jar
+  notify: restart jboss
+
+
+#    - name: Ensure jboss is running (and enable to autostart)
+#      action: service name=jboss-eap enabled=yes state=started
+
+
+# ----------- START: SSL section
+- name: Create {{base_dir}}/jboss7.3/security directory
+  file: path={{base_dir}}/jboss7.3/security state=directory owner=jboss group=jboss mode=0755
+
+- name: Copy {{base_dir}}/jboss7.3/security/keystore.jks
+  copy: src=files{{base_dir}}/jboss7.3/security/keystore.jks dest={{base_dir}}/jboss7.3/security/keystore.jks owner=jboss group=jboss mode=0644
+  notify: restart jboss
+
+- name: Copy HP CA certs across to /etc/pki/java
+  copy: src={{item}} dest=/etc/pki/java owner=root group=root mode=0644
+  with_fileglob: files/etc/pki/java/*
+
+- name: Import hpca2ssG2_ns.crt into /etc/pki/java/cacerts
+  command: /usr/bin/keytool -import -alias hpca2 -noprompt -trustcacerts -file /etc/pki/java/hpca2ssG2_ns.crt -storepass changeit -keystore /etc/pki/java/cacerts
+  ignore_errors: yes
+
+- name: Import hpca2_recertified_ns.crt into /etc/pki/java/cacerts
+  command: /usr/bin/keytool -import -alias hpca2_rec -noprompt -trustcacerts -file /etc/pki/java/hpca2_recertified_ns.crt -storepass changeit -keystore /etc/pki/java/cacerts
+  ignore_errors: yes
+  # ----------- END: SSL section
+
+- name: Ensure jboss is running
+  action: service name=jboss-eap7.3 enabled=yes state=started
+
+- name: Configure /etc/monit.d/jboss-eap file
+  template: src=templates/etc/monit.d/jboss-eap7.3.j2 dest=/etc/monit.d/jboss-eap7.3
+  notify: restart monit
+
+- name: Configure motd
+  template: src=templates/etc/motd.j2 dest=/etc/motd

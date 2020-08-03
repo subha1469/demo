@@ -1,0 +1,12 @@
+---
+- name: restart jboss
+  action: service name=jboss-eap7.3 state=restarted
+
+- name: stop jboss
+  action: service name=jboss-eap7.3 state=stopped
+
+- name: start jboss
+  action: service name=jboss-eap7.3 state=started
+
+- name: restart monit
+  action: service name=monit state=restarted
