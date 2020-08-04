@@ -80,27 +80,27 @@
   copy: src=files/opt/cloudhost/jboss7.3/standalone/deployments/DO_NOT_REMOVE.war dest={{base_dir}}/jboss7.3/standalone/deployments/DO_NOT_REMOVE.war
   notify: restart jboss
 
-- name: Install sqlserver module.xml
+- name: Install sqlserver connectivity module
   copy: src=files/opt/cloudhost/jboss7.3/jbosseap7.3/modules/system/layers/base/com/microsoft/sqlserver/main/module.xml dest={{base_dir}}/jboss7.3/install/modules/system/layers/base/com/microsoft/sqlserver/main/module.xml
   notify: restart jboss
 
-- name: Install sqlserver sqljdbc42.jar
+- name: Install sqlserver jdbc jar
   copy: src=files/opt/cloudhost/jboss7.3/jbosseap7.3/modules/system/layers/base/com/microsoft/sqlserver/main/sqljdbc42.jar dest={{base_dir}}/jboss7.3/install/modules/system/layers/base/com/microsoft/sqlserver/main/sqljdbc42.jar
   notify: restart jboss
 
-- name: Install mysql module.xml
+- name: Install mysql connectivity module
   copy: src=files/opt/cloudhost/jboss7.3/jbosseap7.3/modules/system/layers/base/com/mysql/main/module.xml dest={{base_dir}}/jboss7.3/install/modules/system/layers/base/com/mysql/main/module.xml
   notify: restart jboss
 
-- name: Install mysql sqljdbc42.jar
-  copy: src=files/opt/cloudhost/jboss7.3/jbosseap7.3/modules/system/layers/base/com/mysql/main/mysql-connector-java-5.1.39-bin.jar dest={{base_dir}}/jboss7.3/install/modules/system/layers/base/com/mysql/main/sqljdbc42.jar
+- name: Install mysql jdbc jar
+  copy: src=files/opt/cloudhost/jboss7.3/jbosseap7.3/modules/system/layers/base/com/mysql/main/mysql-connector-java-5.1.39-bin.jar dest={{base_dir}}/jboss7.3/install/modules/system/layers/base/com/mysql/main/mysql-connector-java-5.1.39-bin.jar
   notify: restart jboss
 
-- name: Install oracle module.xml
+- name: Install oracle connectivity module
   copy: src=files/opt/cloudhost/jboss7.3/jbosseap7.3/modules/system/layers/base/com/oracle/main/module.xml dest={{base_dir}}/jboss7.3/install/modules/system/layers/base/com/oracle/main/module.xml
   notify: restart jboss
 
-- name: Install oracle ojdbc7.jar
+- name: Install oracle jdbc jar
   copy: src=files/opt/cloudhost/jboss7.3/jbosseap7.3/modules/system/layers/base/com/oracle/main/ojdbc7.jar dest={{base_dir}}/jboss7.3/install/modules/system/layers/base/com/oracle/main/ojdbc7.jar
   notify: restart jboss
 
