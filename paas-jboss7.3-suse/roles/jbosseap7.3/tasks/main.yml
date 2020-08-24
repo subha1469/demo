@@ -22,11 +22,11 @@
     java-1.8.0-openjdk]
 
 - name: Copy SharedHosting.repo
-  yum: name=DXC-SharedHosting-yum-repo state=latest
-  tags: yum
+  template: src=SharedHosting.repo.j2 dest=/etc/zypp/repos.d/SharedHosting.repo backup=yes
+  tags: zypper
 
 - name: Install EAP packages
-  action: yum name={{item}} state=latest
+  action: zypper name={{item}} state=latest
   with_items: [
      cjboss-eap7.3]
 
@@ -73,7 +73,7 @@
   template: src=templates/etc/logrotate.d/jboss-eap7.3.j2 dest=/etc/logrotate.d/jboss-eap7.3
   notify: restart jboss
 
-- name: Copy /etc/init.d/jboss-eap7.3
+- name: Copy the unit file for jboss-eap7.3
   copy: src=files/usr/lib/systemd/system/jboss-eap7.3.service dest=/usr/lib/systemd/system/jboss-eap7.3.service
 
 - name: deploy DO_NOT_REMOVE app
@@ -117,17 +117,20 @@
   copy: src=files{{base_dir}}/jboss7.3/security/keystore.jks dest={{base_dir}}/jboss7.3/security/keystore.jks owner=jboss group=jboss mode=0644
   notify: restart jboss
 
-- name: Copy HP CA certs across to /etc/pki/java
-  copy: src={{item}} dest=/etc/pki/java owner=root group=root mode=0644
-  with_fileglob: files/etc/pki/java/*
+# Not needed for SLES
+#- name: Copy HP CA certs across to /etc/pki/java
+#  copy: src={{item}} dest=/etc/pki/java owner=root group=root mode=0644
+#  with_fileglob: files/etc/pki/java/*
 
-- name: Import hpca2ssG2_ns.crt into /etc/pki/java/cacerts
-  command: /usr/bin/keytool -import -alias hpca2 -noprompt -trustcacerts -file /etc/pki/java/hpca2ssG2_ns.crt -storepass changeit -keystore /etc/pki/java/cacerts
-  ignore_errors: yes
+#- name: Import hpca2ssG2_ns.crt into /etc/pki/java/cacerts
+#  command: /usr/bin/keytool -import -alias hpca2 -noprompt -trustcacerts -file /etc/pki/java/hpca2ssG2_ns.crt -storepass changeit -keystore /etc/pki/java/cacerts
+#  ignore_errors: yes
 
-- name: Import hpca2_recertified_ns.crt into /etc/pki/java/cacerts
-  command: /usr/bin/keytool -import -alias hpca2_rec -noprompt -trustcacerts -file /etc/pki/java/hpca2_recertified_ns.crt -storepass changeit -keystore /etc/pki/java/cacerts
-  ignore_errors: yes
+#- name: Import hpca2_recertified_ns.crt into /etc/pki/java/cacerts
+#  command: /usr/bin/keytool -import -alias hpca2_rec -noprompt -trustcacerts -file /etc/pki/java/hpca2_recertified_ns.crt -storepass changeit -keystore /etc/pki/java/cacerts
+#  ignore_errors: yes
+#end "not needed for SLEL"
+
   # ----------- END: SSL section
 
 - name: Ensure jboss is running

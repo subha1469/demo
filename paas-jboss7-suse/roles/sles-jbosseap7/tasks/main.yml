@@ -21,7 +21,7 @@
   tags: zypper
 
 - name: Install EAP packages
-  action: yum name={{item}} state=latest
+  action: zypper name={{item}} state=latest
   with_items: [
      cjboss-eap7]
   tags: zypper
@@ -60,7 +60,7 @@
 - name: Push Default Content
   file: src=files/opt/cloudhost/jboss/standalone/deployments/DO_NOT_REMOVE.war dest=/opt/cloudhost/jboss/standalone/deployments/DO_NOT_REMOVE.war
     # ----------- END: Deploy default content
-    
+
     # ----------- START: Service configuration
 - name: Configure /etc/sysconfig/jboss-eap
   template: src=templates/etc/sysconfig/jboss-eap.conf.j2 dest=/etc/sysconfig/jboss-eap.conf
