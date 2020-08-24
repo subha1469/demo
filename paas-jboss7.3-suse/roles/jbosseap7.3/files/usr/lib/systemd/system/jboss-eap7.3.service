@@ -1,0 +1,15 @@
+[Unit]
+Description=Jboss7.3 - instance
+After=syslog.target network.target
+
+[Service]
+Type=forking
+User=jboss
+Environment=CONFIG_FILE=/etc/sysconfig/jboss-eap7.3.conf
+LimitNOFILE=102642
+ExecStart=/opt/cloudhost/jboss7.3/install/bin/jboss-ctl.sh start
+ExecStop=/opt/cloudhost/jboss7.3/install/bin/jboss-ctl.sh stop
+
+
+[Install]
+WantedBy=multi-user.target
